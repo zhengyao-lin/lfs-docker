@@ -9,15 +9,15 @@ FROM alpine:3.16 AS host
 
 # Some temporary environment variables (including 4.4. Setting Up the Environment)
 ARG LFS=/lfs
+ARG LFS_TGT=x86_64-lfs-linux-gnu
 ARG LFS_USER=lfs
 ARG LFS_GROUOP=lfs
-ARG LFS_VERSION=11.1-systemd
-ARG LC_ALL=POSIX
-ARG LFS_TGT=x86_64-lfs-linux-gnu
-ARG PATH=${LFS}/tools/bin:/bin:/usr/bin:/usr/sbin
-ARG CONFIG_SITE=${MAKE_JOBS}/usr/share/config.site
 ARG WGET="wget --no-verbose --show-progress --progress=bar:force:noscroll"
 ARG MAKEFLAGS="-j8"
+
+ENV PATH=${LFS}/tools/bin:/bin:/sbin:/usr/bin:/usr/sbin
+ENV LC_ALL=POSIX
+ENV CONFIG_SITE=${LFS}/usr/share/config.site
 
 # 2.2. Host System Requirements
 # TODO: remove the mirrors here
