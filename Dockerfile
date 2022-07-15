@@ -1856,7 +1856,7 @@ RUN passwd -d root
 ########################
 # Image 4. ISO Builder #
 ########################
-FROM alpine:3.16
+FROM alpine:3.16 AS iso-builder
 
 # TODO: remove the mirrors here
 RUN apk add --no-cache \
@@ -1947,3 +1947,9 @@ RUN genisoimage -o ../lfs.iso             \
                 -boot-info-table .
 
 WORKDIR /build
+
+###############################
+# Image 5. The Final Artifact #
+###############################
+FROM scratch
+COPY --from=iso-builder /build/lfs.iso /

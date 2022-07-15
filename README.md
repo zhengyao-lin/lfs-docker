@@ -4,10 +4,21 @@ Build LFS using Docker. Based on [LFS 11.1-systemd](https://www.linuxfromscratch
 
 # Usage
 
-Install Docker first on your system. Then cd into this repo and simply run:
+First, install Docker on your system. Then cd into this repo.
+
+## With Docker >= 18.09
 ```
-docker build .
+DOCKER_BUILDKIT=1 docker build -o . .
+```
+An ISO image `lfs.iso` will be produced in the current directory
+
+## With Docker < 18.09
+```
+docker build -t lfs .
 ```
 
+The final Docker image `lfs` contains a single bootable ISO image `/lfs.iso`.
+You can extract it by running the image in a container and using `docker cp`.
+
 On a laptop with 8th-gen low-power Intel CPUs and 16 GB of memory,
-this took 124 min to finish and used 13.3 GB of disk space.
+the entire build took 124 min to finish and used 13.3 GB of disk space.
