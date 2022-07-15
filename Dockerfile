@@ -1,3 +1,5 @@
+# Based on LFS 11.1-systemd, published on March 1st, 2022
+
 ###############################
 # II. Preparing for the Build #
 ###############################
@@ -1826,3 +1828,33 @@ RUN echo "/bin/sh" >> /etc/shells && \
     echo "/bin/bash" >> /etc/shells
 
 # Skipping 10.2. Creating the /etc/fstab File
+
+# 10.3. Linux-5.16.9
+ADD resources/kernel_config /tmp/kernel_config
+RUN tar -xf linux-5.16.9.tar.xz && \
+    pushd linux-5.16.9 && \
+    make mrproper && \
+    make defconfig && \
+    # Edit certain flags specified in resources/kernel_config
+    scripts/kconfig/merge_config.sh .config /tmp/kernel_config && \
+    make && \
+    make modules_install && \
+    cp -iv arch/x86/boot/bzImage /boot/vmlinuz-5.16.9 && \
+    cp -iv System.map /boot/System.map-5.16.9 && \
+    cp -iv .config /boot/config-5.16.9 && \
+    # Install documentation
+    install -d /usr/share/doc/linux-5.16.9 && \
+    cp -r Documentation/* /usr/share/doc/linux-5.16.9 && \
+    # 10.3.2. Configuring Linux Module Load Order
+    install -v -m755 -d /etc/modprobe.d && \
+    echo 'install ohci_hcd /sbin/modprobe ehci_hcd ; /sbin/modprobe -i ohci_hcd ; true' >> /etc/modprobe.d/usb.conf && \
+    echo 'install uhci_hcd /sbin/modprobe ehci_hcd ; /sbin/modprobe -i uhci_hcd ; true' >> /etc/modprobe.d/usb.conf && \
+    popd && \
+    rm -rv linux-5.16.9
+
+# Clean up source code
+WORKDIR /
+RUN rm -rv /sources
+
+# Update shell prompt
+ENV PS1='\u@\h:\w\$ '

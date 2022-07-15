@@ -10,4 +10,4 @@ docker build .
 ```
 
 On a laptop with 8th-gen low-power Intel CPUs and 16 GB of memory,
-this took 58 min to finish and used 9.3 GB of disk space.
+this took 124 min to finish and used 13.3 GB of disk space.
