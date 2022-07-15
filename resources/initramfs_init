@@ -7,7 +7,7 @@ mount -t sysfs     sysfs     /sys
 mount -t tmpfs     tmpfs     /tmp
 
 cd /tmp
-mkdir -p boot system
+mkdir -p boot lower upper work system
 
 # Find the boot device
 IFS="
@@ -18,11 +18,18 @@ IFS="
 
     # Check if a device contains system.squashfs
     # If so, mount system.squashfs and switch_root to it
-    if mount $dev_path boot && \
-       [ -e boot/system.squashfs ] && \
-       mount -t squashfs boot/system.squashfs system; then
-        echo "Found boot device at $dev_path, switch_root now"
-        exec switch_root system /sbin/init
+    if mount $dev_path boot && [ -e boot/system.squashfs ]; then
+        # Mount squashfs then mount an overlay fs over it so that the resulting directory is writable
+        if mount -t squashfs boot/system.squashfs lower && \
+           mount -t overlay \
+                 -o lowerdir=/tmp/lower,upperdir=/tmp/upper,workdir=/tmp/work \
+                 none system; then
+            echo "Found boot device $dev_path, switch_root now"
+            exec switch_root system /sbin/init
+        else
+            echo "Found boot device $dev_path, but failed to load system.squashfs"
+            exec sh
+        fi
     fi
 done
 

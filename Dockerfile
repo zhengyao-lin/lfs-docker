@@ -1884,15 +1884,15 @@ COPY --from=system / lfs
 RUN rm -r lfs/sources
 
 # 9.2. General Network Configuration
-# This is done now since previously /etc/hostname and /etc/hosts
-# will be overwritten by Docker
+# This is done here since in the previous stage,
+# /etc/hostname and /etc/hosts would be overwritten by Docker
 ARG LFS_HOSTNAME
-RUN echo "$LFS_HOSTNAME" > /etc/hostname && \
-    echo "127.0.0.1 localhost" >> /etc/hosts && \
-    echo "127.0.1.1 $LFS_HOSTNAME" >> /etc/hosts && \
-    echo "::1       localhost ip6-localhost ip6-loopback" >> /etc/hosts && \
-    echo "ff02::1   ip6-allnodes" >> /etc/hosts && \
-    echo "ff02::2   ip6-allrouters" >> /etc/hosts
+RUN echo "$LFS_HOSTNAME" > lfs/etc/hostname && \
+    echo "127.0.0.1 localhost" >> lfs/etc/hosts && \
+    echo "127.0.1.1 $LFS_HOSTNAME" >> lfs/etc/hosts && \
+    echo "::1       localhost ip6-localhost ip6-loopback" >> lfs/etc/hosts && \
+    echo "ff02::1   ip6-allnodes" >> lfs/etc/hosts && \
+    echo "ff02::2   ip6-allrouters" >> lfs/etc/hosts
 
 RUN mkdir lfs/proc lfs/sys lfs/dev
 
