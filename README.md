@@ -22,3 +22,9 @@ You can extract it by running the image in a container and using `docker cp`.
 
 On a laptop with 8th-gen low-power Intel CPUs and 16 GB of memory,
 the entire build took 124 min to finish and used 13.3 GB of disk space.
+
+# Related work
+
+- https://github.com/reinterpretcat/lfs
+- https://github.com/0rland/lfs-docker
+- https://github.com/pbret/lfs-docker
