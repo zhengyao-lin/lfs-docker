@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# Mount all essential virtual file systems
+mount -t devtmpfs  devtmpfs  /dev
+mount -t proc      proc      /proc
+mount -t sysfs     sysfs     /sys
+mount -t tmpfs     tmpfs     /tmp
+
+cd /tmp
+mkdir -p boot system
+
+# Find the boot device
+IFS="
+"; for device in $(blkid); do
+    dev_path=$(echo $device | cut -d ":" -f 1)
+
+    echo "Checking if $dev_path is the boot device"
+
+    # Check if a device contains system.squashfs
+    # If so, mount system.squashfs and switch_root to it
+    if mount $dev_path boot && \
+       [ -e boot/system.squashfs ] && \
+       mount -t squashfs boot/system.squashfs system; then
+        echo "Found boot device at $dev_path, switch_root now"
+        exec switch_root system /sbin/init
+    fi
+done
+
+echo "Could not find the boot device"
+exec sh

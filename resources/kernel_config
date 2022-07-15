@@ -20,3 +20,6 @@ CONFIG_TMPFS_POSIX_ACL=y
 # Add support for squashfs and overlayfs
 CONFIG_SQUASHFS=y
 CONFIG_OVERLAY_FS=y
+
+# Suppress stack usage prompt
+CONFIG_DEBUG_STACK_USAGE=n

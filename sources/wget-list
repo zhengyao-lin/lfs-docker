@@ -91,3 +91,5 @@ https://www.linuxfromscratch.org/patches/lfs/11.1/kbd-2.4.0-backspace-1.patch
 https://www.linuxfromscratch.org/patches/lfs/11.1/perl-5.34.0-upstream_fixes-1.patch
 https://www.linuxfromscratch.org/patches/lfs/11.1/sysvinit-3.01-consolidated-1.patch
 https://www.linuxfromscratch.org/patches/lfs/11.1/systemd-250-upstream_fixes-1.patch
+https://mirrors.edge.kernel.org/pub/linux/utils/boot/syslinux/syslinux-6.03.tar.xz
+https://www.busybox.net/downloads/binaries/1.28.1-defconfig-multiarch/busybox-x86_64

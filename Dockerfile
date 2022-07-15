@@ -1806,14 +1806,7 @@ RUN rm -rf /tmp/* && \
     userdel -r tester
 
 # 9.2. General Network Configuration
-# NOTE: some parts skipped
-ARG LFS_HOSTNAME
-RUN echo "$LFS_HOSTNAME" > /etc/hostname && \
-    echo "127.0.0.1 localhost" >> /etc/hosts && \
-    echo "127.0.1.1 $LFS_HOSTNAME" >> /etc/hosts && \
-    echo "::1       localhost ip6-localhost ip6-loopback" >> /etc/hosts && \
-    echo "ff02::1   ip6-allnodes" >> /etc/hosts && \
-    echo "ff02::2   ip6-allrouters" >> /etc/hosts
+# is done later when building the ISO image
 
 # 9.3 - 9.6 skipped
 
@@ -1852,9 +1845,105 @@ RUN tar -xf linux-5.16.9.tar.xz && \
     popd && \
     rm -rv linux-5.16.9
 
-# Clean up source code
 WORKDIR /
-RUN rm -rv /sources
 
 # Update shell prompt
-ENV PS1='\u@\h:\w\$ '
+RUN echo 'PS1='"'"'\u@\h:\w\$ '"'" >> /etc/profile
+
+# For convenience, allow root login without password
+RUN passwd -d root
+
+########################
+# Image 4. ISO Builder #
+########################
+FROM alpine:3.16
+
+# TODO: remove the mirrors here
+RUN apk add --no-cache \
+        --repository https://mirrors.ustc.edu.cn/alpine/v3.16/main/ \
+        --repository https://mirrors.ustc.edu.cn/alpine/v3.16/community/ \
+        --repositories-file /dev/null \
+        squashfs-tools cdrkit cpio wget
+
+RUN mkdir -pv /build
+
+# Copy required packages
+COPY --from=system /sources/syslinux-6.03.tar.xz /build
+COPY --from=system /sources/busybox-x86_64 /build
+
+RUN mkdir /build/initramfs_root /build/iso_root /build/iso_root/isolinux
+
+#################################################
+# Pack the entire LFS system in squashfs format #
+#################################################
+
+WORKDIR /build
+
+# Copy the entire root directory for further processing
+COPY --from=system / lfs
+RUN rm -r lfs/sources
+
+# 9.2. General Network Configuration
+# This is done now since previously /etc/hostname and /etc/hosts
+# will be overwritten by Docker
+ARG LFS_HOSTNAME
+RUN echo "$LFS_HOSTNAME" > /etc/hostname && \
+    echo "127.0.0.1 localhost" >> /etc/hosts && \
+    echo "127.0.1.1 $LFS_HOSTNAME" >> /etc/hosts && \
+    echo "::1       localhost ip6-localhost ip6-loopback" >> /etc/hosts && \
+    echo "ff02::1   ip6-allnodes" >> /etc/hosts && \
+    echo "ff02::2   ip6-allrouters" >> /etc/hosts
+
+RUN mkdir lfs/proc lfs/sys lfs/dev
+
+RUN mksquashfs lfs iso_root/system.squashfs && \
+    rm -r lfs
+
+##################
+# Make initramfs #
+##################
+
+WORKDIR /build/initramfs_root
+
+RUN mkdir -pv bin lib dev proc sys tmp
+ADD resources/initramfs_init init
+# Install busybox to initramfs
+RUN cp ../busybox-x86_64 bin/busybox && \
+    # Use the busybox binary on the host system to install symbolic links
+    /bin/busybox --install -s bin && \
+    chmod +x bin/busybox && \
+    chmod +x init && \
+    find . | cpio -ov --format=newc | gzip -9 > ../iso_root/isolinux/initramfs.cpio.gz
+
+##################
+# Make ISO image #
+##################
+
+WORKDIR /build/iso_root
+
+# Copy kernel from the built system
+COPY --from=system /boot/vmlinuz-5.16.9 isolinux/vmlinuz
+
+# Install and configure isolinux
+RUN tar -xf ../syslinux-6.03.tar.xz && \
+    cp -v syslinux-6.03/bios/core/isolinux.bin                 isolinux/isolinux.bin && \
+    cp -v syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 isolinux/ldlinux.c32 && \
+    rm -r syslinux-6.03 && \
+    echo "DEFAULT lfs" >> isolinux/isolinux.cfg && \
+    echo "LABEL lfs" >> isolinux/isolinux.cfg && \
+    echo "    KERNEL vmlinuz" >> isolinux/isolinux.cfg && \
+    echo "    APPEND initrd=initramfs.cpio.gz" >> isolinux/isolinux.cfg
+
+# Make the final ISO image
+RUN genisoimage -o ../lfs.iso             \
+                -b isolinux/isolinux.bin  \
+                -c isolinux/boot.cat      \
+                # Allow longer and more complex file names
+                -J -r                     \
+                -allow-lowercase          \
+                -allow-multidot           \
+                -no-emul-boot             \
+                -boot-load-size 4         \
+                -boot-info-table .
+
+WORKDIR /build

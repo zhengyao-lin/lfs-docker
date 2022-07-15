@@ -1,2 +1,4 @@
-*.tar.*
-*.patch
+*
+!.gitignore
+!README.md
+!wget-list
