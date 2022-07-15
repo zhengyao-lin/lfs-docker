@@ -6,6 +6,7 @@ ARG LFS=/lfs
 ARG LFS_TGT=x86_64-lfs-linux-gnu
 ARG LFS_USER=lfs
 ARG LFS_GROUOP=lfs
+ARG LFS_HOSTNAME=lfs
 ARG ENABLE_TESTS=false
 ARG MAKEFLAGS="-j8"
 
@@ -463,6 +464,7 @@ ARG LFS
 COPY --from=host ${LFS} /
 
 # NOTE: section "7.3. Preparing Virtual Kernel File Systems" is automatically set up by Docker
+# RUN mkdir -pv /{dev,proc,sys,run}
 
 # 7.4. Entering the Chroot Environment
 ENV HOME=/root
@@ -471,7 +473,7 @@ ENV PATH=/bin:/usr/bin:/usr/sbin
 ENTRYPOINT [ "/bin/bash" ]
 
 # 7.5. Creating Directories
-RUN mkdir -pv /{boot,home,mnt,opt,srv} && \
+RUN mkdir -pv /{boot,home,mnt,opt,srv,run} && \
     mkdir -pv /etc/{opt,sysconfig} && \
     mkdir -pv /lib/firmware && \
     mkdir -pv /media/{floppy,cdrom} && \
@@ -1728,7 +1730,7 @@ RUN tar -xf man-db-2.10.1.tar.xz && \
 
 # 8.74. Procps-ng-3.3.17
 RUN tar -xf procps-ng-3.3.17.tar.xz && \
-    pushd procps-ng-3.3.17 && \
+    pushd procps-3.3.17 && \
     ./configure --prefix=/usr                            \
                 --docdir=/usr/share/doc/procps-ng-3.3.17 \
                 --disable-static                         \
@@ -1738,7 +1740,7 @@ RUN tar -xf procps-ng-3.3.17.tar.xz && \
     if $ENABLE_TESTS; then make check; fi && \
     make install && \
     popd && \
-    rm -rv procps-ng-3.3.17
+    rm -rv procps-3.3.17
 
 # 8.75. Util-linux-2.37.4
 RUN tar -xf util-linux-2.37.4.tar.xz && \
@@ -1790,7 +1792,6 @@ RUN tar -xf e2fsprogs-1.46.5.tar.gz && \
     popd && \
     rm -rv e2fsprogs-1.46.5
 
-
 # 8.78. Stripping
 ADD resources/strip.sh /tmp/strip.sh
 RUN bash /tmp/strip.sh
@@ -1801,3 +1802,27 @@ RUN rm -rf /tmp/* && \
     find /usr/lib /usr/libexec -name \*.la -delete && \
     find /usr -depth -name $LFS_TGT\* | xargs rm -rf && \
     userdel -r tester
+
+# 9.2. General Network Configuration
+# NOTE: some parts skipped
+ARG LFS_HOSTNAME
+RUN echo "$LFS_HOSTNAME" > /etc/hostname && \
+    echo "127.0.0.1 localhost" >> /etc/hosts && \
+    echo "127.0.1.1 $LFS_HOSTNAME" >> /etc/hosts && \
+    echo "::1       localhost ip6-localhost ip6-loopback" >> /etc/hosts && \
+    echo "ff02::1   ip6-allnodes" >> /etc/hosts && \
+    echo "ff02::2   ip6-allrouters" >> /etc/hosts
+
+# 9.3 - 9.6 skipped
+
+# 9.7. Configuring the System Locale
+RUN echo "LANG=en_US.UTF-8" > /etc/locale.conf
+
+# 9.8. Creating the /etc/inputrc File
+ADD resources/inputrc /etc/inputrc
+
+# 9.9. Creating the /etc/shells File
+RUN echo "/bin/sh" >> /etc/shells && \
+    echo "/bin/bash" >> /etc/shells
+
+# Skipping 10.2. Creating the /etc/fstab File
