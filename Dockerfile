@@ -465,8 +465,8 @@ ARG LFS
 # Copy the LFS root directory from previous build
 COPY --from=host ${LFS} /
 
-# NOTE: section "7.3. Preparing Virtual Kernel File Systems" is automatically set up by Docker
-# RUN mkdir -pv /{dev,proc,sys,run}
+# NOTE: section "7.3. Preparing Virtual Kernel File Systems" is managed by Docker during the build
+# We need to add them manually later (see iso-builder)
 
 # 7.4. Entering the Chroot Environment
 ENV HOME=/root
@@ -493,10 +493,9 @@ RUN mkdir -pv /{boot,home,mnt,opt,srv,run} && \
 
 # 7.6. Creating Essential Files and Symlinks
 # Skipping `ln -sv /proc/self/mounts /etc/mtab` since it's created by Docker
+# Skipping setting /etc/hosts since it's managed by Docker
 ADD resources/passwd resources/group /etc/
-RUN echo "127.0.0.1  localhost $(hostname)" >> /etc/hosts && \
-    echo "::1        localhost" >> /etc/hosts && \
-    echo "tester:x:101:101::/home/tester:/bin/bash" >> /etc/passwd && \
+RUN echo "tester:x:101:101::/home/tester:/bin/bash" >> /etc/passwd && \
     echo "tester:x:101:" >> /etc/group && \
     install -o tester -d /home/tester && \
     touch /var/log/{btmp,lastlog,faillog,wtmp} && \
@@ -1894,7 +1893,7 @@ RUN echo "$LFS_HOSTNAME" > lfs/etc/hostname && \
     echo "ff02::1   ip6-allnodes" >> lfs/etc/hosts && \
     echo "ff02::2   ip6-allrouters" >> lfs/etc/hosts
 
-RUN mkdir lfs/proc lfs/sys lfs/dev
+RUN mkdir -pv lfs/proc lfs/sys lfs/dev
 
 RUN mksquashfs lfs iso_root/system.squashfs && \
     rm -r lfs
