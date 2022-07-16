@@ -10,7 +10,8 @@ ARG LFS_USER=lfs
 ARG LFS_GROUOP=lfs
 ARG LFS_HOSTNAME=lfs
 ARG ENABLE_TESTS=false
-ARG MAKEFLAGS="-j8"
+ARG MAKEFLAGS=-j8
+ARG ISO_VOLUME_ID=LFS
 
 #################
 # Image 1. Host #
@@ -1950,7 +1951,9 @@ RUN \
 
 # Make an ISO image that is bootable (supposedly)
 # from any combination of BIOS/UEFI on USB/CD
+ARG ISO_VOLUME_ID
 RUN xorriso -as mkisofs \
+        -V $ISO_VOLUME_ID \
         -isohybrid-mbr ../syslinux-6.03/bios/mbr/isohdpfx.bin \
         -c isolinux/boot.cat      \
         # First boot entry
