@@ -52,9 +52,16 @@ find_system() {
 }
 
 # Check multiple times since the device may not be set up yet
-for i in {1..5}; do
-    find_system || sleep 1
-done
+find_system || sleep 1
+find_system || sleep 1
+find_system || sleep 1
+find_system || sleep 1
+find_system || sleep 1
+find_system || sleep 1
+find_system || sleep 1
+find_system || sleep 1
+find_system || sleep 1
+find_system
 
 echo "Could not find the boot device"
 exec sh
