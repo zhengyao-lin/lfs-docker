@@ -1862,7 +1862,7 @@ RUN apk add --no-cache \
         --repository https://mirrors.ustc.edu.cn/alpine/v3.16/main/ \
         --repository https://mirrors.ustc.edu.cn/alpine/v3.16/community/ \
         --repositories-file /dev/null \
-        squashfs-tools cdrkit cpio wget
+        squashfs-tools xorriso cpio wget dosfstools mtools
 
 RUN mkdir -pv /build
 
@@ -1924,26 +1924,51 @@ WORKDIR /build/iso_root
 COPY --from=system /boot/vmlinuz-5.16.9 isolinux/vmlinuz
 
 # Install and configure isolinux
-RUN tar -xf ../syslinux-6.03.tar.xz && \
-    cp -v syslinux-6.03/bios/core/isolinux.bin                 isolinux/isolinux.bin && \
-    cp -v syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 isolinux/ldlinux.c32 && \
-    rm -r syslinux-6.03 && \
+RUN cd .. && tar -xf syslinux-6.03.tar.xz && cd - && \
+    cp -v ../syslinux-6.03/bios/core/isolinux.bin                 isolinux/isolinux.bin && \
+    cp -v ../syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 isolinux/ldlinux.c32 && \
     echo "DEFAULT lfs" >> isolinux/isolinux.cfg && \
     echo "LABEL lfs" >> isolinux/isolinux.cfg && \
     echo "    KERNEL vmlinuz" >> isolinux/isolinux.cfg && \
     echo "    APPEND initrd=initramfs.cpio.gz" >> isolinux/isolinux.cfg
 
-# Make the final ISO image
-RUN genisoimage -o ../lfs.iso             \
-                -b isolinux/isolinux.bin  \
-                -c isolinux/boot.cat      \
-                # Allow longer and more complex file names
-                -J -r                     \
-                -allow-lowercase          \
-                -allow-multidot           \
-                -no-emul-boot             \
-                -boot-load-size 4         \
-                -boot-info-table .
+# Build EFI System Partition (ESP) image efi.img
+# Used for UEFI booting
+RUN \
+    # Create a 16 MB image (hopefully large enough for the kernel)
+    dd if=/dev/zero of=isolinux/efi.img bs=512 count=32768 && \
+    # Format as FAT12
+    mkfs.msdos -F 12 -n ESP isolinux/efi.img && \
+    # Create /efi/boot and add relevant files
+    mmd -i isolinux/efi.img ::efi && \
+    mmd -i isolinux/efi.img ::efi/boot && \
+    mcopy -i isolinux/efi.img ../syslinux-6.03/efi64/efi/syslinux.efi                  ::efi/boot/bootx64.efi && \
+    mcopy -i isolinux/efi.img ../syslinux-6.03/efi64/com32/elflink/ldlinux/ldlinux.e64 ::efi/boot/ldlinux.e64 && \
+    mcopy -i isolinux/efi.img isolinux/isolinux.cfg                                    ::efi/boot/syslinux.cfg && \
+    mcopy -i isolinux/efi.img isolinux/vmlinuz                                         ::efi/boot/vmlinuz && \
+    mcopy -i isolinux/efi.img isolinux/initramfs.cpio.gz                               ::efi/boot/initramfs.cpio.gz
+
+# Make an ISO image that is bootable (supposedly)
+# from any combination of BIOS/UEFI on USB/CD
+RUN xorriso -as mkisofs \
+        -isohybrid-mbr ../syslinux-6.03/bios/mbr/isohdpfx.bin \
+        -c isolinux/boot.cat      \
+        # First boot entry
+        -b isolinux/isolinux.bin  \
+        -no-emul-boot             \
+        -boot-load-size 4         \
+        -boot-info-table          \
+        # Second boot entry
+        -eltorito-alt-boot        \
+        -e isolinux/efi.img       \
+        -no-emul-boot             \
+        -isohybrid-gpt-basdat     \
+        # Allow longer and more complex file names
+        -r -J --joliet-long       \
+        -allow-lowercase          \
+        -allow-multidot           \
+        -o ../lfs.iso             \
+        .
 
 WORKDIR /build
 
