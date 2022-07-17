@@ -1,4 +1,4 @@
-# Based on LFS 11.1-systemd, published on March 1st, 2022
+# Based on LFS 11.1-systemd (March 1st, 2022)
 
 ###############################
 # II. Preparing for the Build #

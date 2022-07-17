@@ -1,20 +1,20 @@
-lfs-docker
----
+# lfs-docker
 
-Build LFS using Docker. Based on [LFS 11.1-systemd](https://www.linuxfromscratch.org/lfs/view/11.1-systemd).
+Build Linux From Scratch using Docker.
+Based on [LFS 11.1-systemd](https://www.linuxfromscratch.org/lfs/view/11.1-systemd).
 
-# Usage
+## Usage
 
 First, [install Docker](https://docs.docker.com/get-docker/) on your system.
 Then `cd` into this repo.
 
-## If you are using Docker >= 18.09
+### If you are using Docker >= 18.09
 ```
 DOCKER_BUILDKIT=1 docker build -o . .
 ```
 An ISO image `lfs.iso` will be produced in the current directory
 
-## If you are using Docker < 18.09
+### If you are using Docker < 18.09
 ```
 docker build -t lfs .
 ```
@@ -25,7 +25,41 @@ You can extract it by running the image in a container and using `docker cp`.
 On a laptop with a 4-core (8-thread) low-power Intel CPU and 16 GB of memory,
 the entire build took roughly 2 hours and used 15 GB of disk space.
 
-# More details on making a bootable ISO image
+## How does the Dockerfile work
+
+Since 17.05, Docker introduced multi-stage builds, which essentially allow you
+to sequentially build multiple images in one Dockerfile, while allowing each image
+to reference the files from previous builds.
+
+This simplifies the build process of LFS a lot, since each stage of the LFS manual
+can simply be splitted into Docker build stages.
+And the chroot action in LFS manual 7.4 is implicitly handled by Docker, allowing one to
+run the build without the `--privileged` flag.
+
+More specifically, the Dockerfile is structured like this:
+```
+# Stage 1: preparing the host
+# Section 2 - 7.3 are done in this stage
+FROM alpine AS host
+...
+
+# Stage 2: chroot into the toolchain and build from there
+# Sections 7.4 - 7.14 are done in this stage
+FROM scratch AS toolchain
+COPY --from=host ${LFS} /
+...
+
+# Stage 3: building the packages in the final system
+# Sections 8 - 10 are done in this stage
+FROM toolchain AS system
+...
+
+# Stage 4: build an ISO image
+FROM alpine:3.16 AS iso-builder
+...
+```
+
+## More details on making a bootable ISO image
 
 For booting the ISO image, I decided to use GRUB 2 with the
 goal to support booting with both legacy BIOS and UEFI.
@@ -71,7 +105,7 @@ Some useful resources:
 - Syslinux/isolinux usage: https://wiki.syslinux.org/wiki/index.php?title=ISOLINUX
 - Making a "hybrid" image for syslinux: https://wiki.syslinux.org/wiki/index.php?title=Isohybrid#UEFI
 
-# Related work
+## Related work
 
 - https://github.com/reinterpretcat/lfs
 - https://github.com/0rland/lfs-docker
