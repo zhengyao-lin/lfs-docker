@@ -1997,6 +1997,9 @@ RUN grub-mkimage             \
     mcopy -i tmp/efi.img tmp/bootx64.efi ::efi/boot/bootx64.efi && \
     cp tmp/efi.img boot/grub/x86_64-efi/efi.img
 
+# Also copy efi/boot/bootx64.efi to the root of the ISO image
+RUN mkdir -pv efi/boot && cp -v tmp/bootx64.efi efi/boot/bootx64.efi
+
 ADD resources/grub.cfg boot/grub/grub.cfg
 
 # Make an ISO image that is bootable (supposedly)

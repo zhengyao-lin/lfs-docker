@@ -5,15 +5,16 @@ Build LFS using Docker. Based on [LFS 11.1-systemd](https://www.linuxfromscratch
 
 # Usage
 
-First, install Docker on your system. Then cd into this repo.
+First, [install Docker](https://docs.docker.com/get-docker/) on your system.
+Then `cd` into this repo.
 
-## With Docker >= 18.09
+## If you are using Docker >= 18.09
 ```
 DOCKER_BUILDKIT=1 docker build -o . .
 ```
 An ISO image `lfs.iso` will be produced in the current directory
 
-## With Docker < 18.09
+## If you are using Docker < 18.09
 ```
 docker build -t lfs .
 ```
@@ -61,10 +62,18 @@ This preloaded configuration will then search for the actual boot drive and use 
 
 There is also some black magic to allow booting from, say, a USB flash drive, when the ISO image is written to it (e.g. `dd if=lfs.iso of=<USB drive>`).
 
-Some useful references when I tried to figure everything out:
+Some useful resources:
+- UEFI support in kernel: https://www.linuxfromscratch.org/blfs/view/11.1-systemd/postlfs/grub-setup.html#uefi-kernel
+- Making initramfs: https://lyngvaer.no/log/create-linux-initramfs
+- Making a UEFI bootable ISO image using GRUB: https://github.com/syzdek/efibootiso
+- Making a UEFI + BIOS bootable ISO image using GRUB: https://opendev.org/airship/images/src/commit/5e55597fbcebc9e16006e06b7514b21b9882dc8d/debian-isogen/files/functions.sh
+- GRUB modules: https://www.linux.org/threads/understanding-the-various-grub-modules.11142/
+- Syslinux/isolinux usage: https://wiki.syslinux.org/wiki/index.php?title=ISOLINUX
+- Making a "hybrid" image for syslinux: https://wiki.syslinux.org/wiki/index.php?title=Isohybrid#UEFI
 
 # Related work
 
 - https://github.com/reinterpretcat/lfs
 - https://github.com/0rland/lfs-docker
 - https://github.com/pbret/lfs-docker
+- https://github.com/EvilFreelancer/docker-lfs-build
