@@ -11,7 +11,9 @@ ARG LFS_GROUOP=lfs
 ARG LFS_HOSTNAME=lfs
 ARG ENABLE_TESTS=false
 ARG MAKEFLAGS=-j8
+
 ARG ISO_VOLUME_ID=LFS
+ARG ISO_GRUB_PRELOAD_MODULES="part_gpt part_msdos linux normal iso9660 udf all_video video_fb search configfile echo cat"
 
 #################
 # Image 1. Host #
@@ -1532,6 +1534,35 @@ RUN tar -xf grub-2.06.tar.xz && \
     popd && \
     rm -rv grub-2.06
 
+# TODO: The GRUB images used later to make the bootable ISO
+#       should preferably come from here. To do that, we need to compile
+#       GRUB using the following command instead.
+# NOTE: Building with UEFI support (see https://www.linuxfromscratch.org/blfs/view/11.1-systemd/postlfs/grub-efi.html)
+# NOTE: since FreeType-2.11.1 and efibootmgr-17 are not installed at this point,
+#       Some functionalities might be missing
+# RUN tar -xf grub-2.06.tar.xz && \
+#     pushd grub-2.06 && \
+#     # We need both i386-pc and x86_64-efi targets
+#     ./configure --prefix=/usr          \
+#                 --sysconfdir=/etc      \
+#                 --disable-efiemu       \
+#                 --disable-werror       \
+#                 --target=i386          \
+#                 --with-platform=pc && \
+#     make && \
+#     make install && \
+#     make clean && \
+#     ./configure --prefix=/usr          \
+#                 --sysconfdir=/etc      \
+#                 --disable-efiemu       \
+#                 --disable-werror       \
+#                 --with-platform=efi && \
+#     make && \
+#     make install && \
+#     mv -v /etc/bash_completion.d/grub /usr/share/bash-completion/completions && \
+#     popd && \
+#     rm -rv grub-2.06
+
 # 8.60. Gzip-1.11
 RUN tar -xf gzip-1.11.tar.xz && \
     pushd gzip-1.11 && \
@@ -1863,7 +1894,9 @@ RUN apk add --no-cache \
         --repository https://mirrors.ustc.edu.cn/alpine/v3.16/main/ \
         --repository https://mirrors.ustc.edu.cn/alpine/v3.16/community/ \
         --repositories-file /dev/null \
-        squashfs-tools xorriso cpio wget dosfstools mtools
+        squashfs-tools xorriso cpio wget \
+        dosfstools mtools \
+        grub grub-efi grub-bios
 
 RUN mkdir -pv /build
 
@@ -1871,7 +1904,7 @@ RUN mkdir -pv /build
 COPY --from=system /sources/syslinux-6.03.tar.xz /build
 COPY --from=system /sources/busybox-x86_64 /build
 
-RUN mkdir /build/initramfs_root /build/iso_root /build/iso_root/isolinux
+RUN mkdir /build/initramfs_root /build/iso_root
 
 #################################################
 # Pack the entire LFS system in squashfs format #
@@ -1913,7 +1946,7 @@ RUN cp ../busybox-x86_64 bin/busybox && \
     /bin/busybox --install -s bin && \
     chmod +x bin/busybox && \
     chmod +x init && \
-    find . | cpio -ov --format=newc | gzip -9 > ../iso_root/isolinux/initramfs.cpio.gz
+    find . | cpio -ov --format=newc | gzip -9 > ../initramfs.cpio.gz
 
 ##################
 # Make ISO image #
@@ -1921,56 +1954,70 @@ RUN cp ../busybox-x86_64 bin/busybox && \
 
 WORKDIR /build/iso_root
 
+# Prepare file structure
+RUN mkdir boot boot/grub boot/grub/i386-pc boot/grub/x86_64-efi
+
 # Copy kernel from the built system
-COPY --from=system /boot/vmlinuz-5.16.9 isolinux/vmlinuz
+COPY --from=system /boot/vmlinuz-5.16.9 boot/vmlinuz
 
-# Install and configure isolinux
-RUN cd .. && tar -xf syslinux-6.03.tar.xz && cd - && \
-    cp -v ../syslinux-6.03/bios/core/isolinux.bin                 isolinux/isolinux.bin && \
-    cp -v ../syslinux-6.03/bios/com32/elflink/ldlinux/ldlinux.c32 isolinux/ldlinux.c32 && \
-    echo "DEFAULT lfs" >> isolinux/isolinux.cfg && \
-    echo "LABEL lfs" >> isolinux/isolinux.cfg && \
-    echo "    KERNEL vmlinuz" >> isolinux/isolinux.cfg && \
-    echo "    APPEND initrd=initramfs.cpio.gz" >> isolinux/isolinux.cfg
+# Copy the initramfs we just made
+RUN cp ../initramfs.cpio.gz boot/initramfs.cpio.gz
 
-# Build EFI System Partition (ESP) image efi.img
-# Used for UEFI booting
-RUN \
-    # Create a 16 MB image (hopefully large enough for the kernel)
-    dd if=/dev/zero of=isolinux/efi.img bs=512 count=32768 && \
-    # Format as FAT12
-    mkfs.msdos -F 12 -n ESP isolinux/efi.img && \
-    # Create /efi/boot and add relevant files
-    mmd -i isolinux/efi.img ::efi && \
-    mmd -i isolinux/efi.img ::efi/boot && \
-    mcopy -i isolinux/efi.img ../syslinux-6.03/efi64/efi/syslinux.efi                  ::efi/boot/bootx64.efi && \
-    mcopy -i isolinux/efi.img ../syslinux-6.03/efi64/com32/elflink/ldlinux/ldlinux.e64 ::efi/boot/ldlinux.e64 && \
-    mcopy -i isolinux/efi.img isolinux/isolinux.cfg                                    ::efi/boot/syslinux.cfg && \
-    mcopy -i isolinux/efi.img isolinux/vmlinuz                                         ::efi/boot/vmlinuz && \
-    mcopy -i isolinux/efi.img isolinux/initramfs.cpio.gz                               ::efi/boot/initramfs.cpio.gz
+ARG ISO_GRUB_PRELOAD_MODULES
+
+RUN mkdir -pv tmp
+
+# Prepare image for BIOS booting
+RUN grub-mkimage        \
+        -o tmp/core.img \
+        -O i386-pc      \
+        -p /boot/grub   \
+        $ISO_GRUB_PRELOAD_MODULES biosdisk && \
+    cat /usr/lib/grub/i386-pc/cdboot.img tmp/core.img \
+        > boot/grub/i386-pc/eltorito.img
+
+# Prepare image for UEFI booting
+# TODO: check if the size of efi.img is large enough
+ADD resources/grub-stub.cfg tmp
+RUN grub-mkimage             \
+        -o tmp/bootx64.efi   \
+        -O x86_64-efi        \
+        -c tmp/grub-stub.cfg \
+        -p /boot/grub        \
+        $ISO_GRUB_PRELOAD_MODULES && \
+    # Create a FAT-format image and copy bootx64.efi into it
+    dd if=/dev/zero of=tmp/efi.img bs=1M count=8 && \
+    mkfs.vfat -n ESP tmp/efi.img && \
+    mmd -i tmp/efi.img efi efi/boot && \
+    mcopy -i tmp/efi.img tmp/bootx64.efi ::efi/boot/bootx64.efi && \
+    cp tmp/efi.img boot/grub/x86_64-efi/efi.img
+
+ADD resources/grub.cfg boot/grub/grub.cfg
 
 # Make an ISO image that is bootable (supposedly)
 # from any combination of BIOS/UEFI on USB/CD
 ARG ISO_VOLUME_ID
-RUN xorriso -as mkisofs \
-        -V $ISO_VOLUME_ID \
-        -isohybrid-mbr ../syslinux-6.03/bios/mbr/isohdpfx.bin \
-        -c isolinux/boot.cat      \
+RUN rm -rv tmp && \
+    xorriso -as mkisofs                   \
+        -V $ISO_VOLUME_ID                 \
+        -c boot/boot.cat                  \
         # First boot entry
-        -b isolinux/isolinux.bin  \
-        -no-emul-boot             \
-        -boot-load-size 4         \
-        -boot-info-table          \
+        -b boot/grub/i386-pc/eltorito.img \
+        -no-emul-boot                     \
+        -boot-load-size 4                 \
+        -boot-info-table                  \
+        --grub2-boot-info                 \
+        --grub2-mbr /usr/lib/grub/i386-pc/boot_hybrid.img \
         # Second boot entry
-        -eltorito-alt-boot        \
-        -e isolinux/efi.img       \
-        -no-emul-boot             \
-        -isohybrid-gpt-basdat     \
+        -eltorito-alt-boot                \
+        -e boot/grub/x86_64-efi/efi.img   \
+        -no-emul-boot                     \
+        # -isohybrid-gpt-basdat     \
         # Allow longer and more complex file names
-        -r -J --joliet-long       \
-        -allow-lowercase          \
-        -allow-multidot           \
-        -o ../lfs.iso             \
+        -r -J --joliet-long               \
+        -allow-lowercase                  \
+        -allow-multidot                   \
+        -o ../lfs.iso                     \
         .
 
 WORKDIR /build
