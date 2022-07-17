@@ -1985,8 +1985,13 @@ RUN grub-mkimage             \
         -c tmp/grub-stub.cfg \
         -p /boot/grub        \
         $ISO_GRUB_PRELOAD_MODULES && \
+    # Compute the minimal size for efi.img
+    bootx64_size=$(du tmp/bootx64.efi | cut -f 1) && \
+    bootx64_size=$((bootx64_size + 511)) && \
+    num_sectors=$((bootx64_size / 512 + 1)) && \
+    num_sectors=$((num_sectors < 1440 ? 1440 : num_sectors)) && \
     # Create a FAT-format image and copy bootx64.efi into it
-    dd if=/dev/zero of=tmp/efi.img bs=1M count=8 && \
+    dd if=/dev/zero of=tmp/efi.img bs=512 count=$num_sectors && \
     mkfs.vfat -n ESP tmp/efi.img && \
     mmd -i tmp/efi.img efi efi/boot && \
     mcopy -i tmp/efi.img tmp/bootx64.efi ::efi/boot/bootx64.efi && \
