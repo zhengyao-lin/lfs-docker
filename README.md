@@ -22,10 +22,10 @@ docker build -t lfs .
 The final Docker image `lfs` contains a single bootable ISO image `/lfs.iso`.
 You can extract it by running the image in a container and using `docker cp`.
 
-On a laptop with 8th-gen low-power Intel CPUs and 16 GB of memory,
-the entire build took 2 hours and 9 minutes to finish and used 15 GB of disk space.
+On a laptop with a 4-core (8-thread) low-power Intel CPU and 16 GB of memory,
+the entire build took roughly 2 hours and used 15 GB of disk space.
 
-# More details on the ISO image boot process
+# More details on making a bootable ISO image
 
 For booting the ISO image, I decided to use GRUB 2 with the
 goal to support booting with both legacy BIOS and UEFI.
