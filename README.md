@@ -6,40 +6,31 @@ Based on [LFS 11.1-systemd](https://www.linuxfromscratch.org/lfs/view/11.1-syste
 ## Usage
 
 First, [install Docker](https://docs.docker.com/get-docker/) on your system.
-Then `cd` into this repo.
+A Docker version >= 18.09 is required since some BuildKit features are used in the Dockerfile.
 
-### If you are using Docker >= 18.09
+Now `cd` into this repo, and then simply run
 ```
 DOCKER_BUILDKIT=1 docker build -o . .
 ```
-An ISO image `lfs.iso` will be produced in the current directory
-
-### If you are using Docker < 18.09
-```
-docker build -t lfs .
-```
-
-The final Docker image `lfs` contains a single bootable ISO image `/lfs.iso`.
-You can extract it by running the image in a container and using `docker cp`.
+If the build succeeds, an ISO image `lfs.iso` will be produced in the current directory
 
 On a laptop with a 4-core (8-thread) low-power Intel CPU and 16 GB of memory,
-the entire build took roughly 2 hours and used 15 GB of disk space.
+the entire build took roughly 2 hours and used about 15 GB of disk space.
 
 ## How does the Dockerfile work
 
-Since 17.05, Docker introduced multi-stage builds, which essentially allow you
-to sequentially build multiple images in one Dockerfile, while allowing each image
-to reference the files from previous builds.
+This Dockerfile is self-contained and does not use any files from the context
+(except for source files that need to be downloaded, which are also specified in the Dockerfile).
 
-This simplifies the build process of LFS a lot, since each stage of the LFS manual
-can simply be splitted into Docker build stages.
-And the chroot action in LFS manual 7.4 is implicitly handled by Docker, allowing one to
-run the build without the `--privileged` flag.
+One crucial feature used in this Dockerfile is the [multi-stage build](https://docs.docker.com/develop/develop-images/multistage-build/), which essentially allows one
+to sequentially specify multiple images in a Dockerfile, and each image can reference files
+from previous images.
 
-More specifically, the Dockerfile is structured like this:
+Using multi-stage build, our Dockerfile is splitted into the following stages,
+each corresponding to a different part of the LFS manual:
 ```
 # Stage 1: preparing the host
-# Section 2 - 7.3 are done in this stage
+# Sections 2 - 7.3 are done in this stage
 FROM alpine AS host
 ...
 
@@ -58,6 +49,9 @@ FROM toolchain AS system
 FROM alpine:3.16 AS iso-builder
 ...
 ```
+
+Notably, the stage 2 delegates the job of chroot (used in LFS manual section 7.4) to Docker,
+so we do not need any `--privileged` flag to perform this action.
 
 ## More details on making a bootable ISO image
 
