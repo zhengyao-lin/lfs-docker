@@ -2432,7 +2432,7 @@ RUN echo 'PS1='"'"'\u@\h:\w\$ '"'" >> /etc/profile
 # Image 4. ISO Builder #
 ########################
 FROM alpine:3.16 AS iso-builder
-ARG SH
+ARG SH="sh -eu"
 
 # TODO: remove the mirrors here
 RUN apk add --no-cache \
@@ -2646,8 +2646,7 @@ EOT
 # Make an ISO image that is bootable (supposedly)
 # from any combination of BIOS/UEFI on USB/CD
 ARG ISO_VOLUME_ID
-RUN <<'EOT' $SH
-    rm -rv tmp
+RUN rm -rv tmp && \
     xorriso -as mkisofs                   \
         -V $ISO_VOLUME_ID                 \
         -c boot/boot.cat                  \
@@ -2669,7 +2668,6 @@ RUN <<'EOT' $SH
         -allow-multidot                   \
         -o ../lfs.iso                     \
         .
-EOT
 
 WORKDIR /build
 
