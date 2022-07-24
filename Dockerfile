@@ -21,124 +21,117 @@ ARG MAKEFLAGS=-j8
 ARG ISO_VOLUME_ID=LFS
 ARG ISO_GRUB_PRELOAD_MODULES="part_gpt part_msdos linux normal iso9660 udf all_video video_fb search configfile echo cat"
 
-############################
-# Image 0. Source Tarballs #
-############################
+# Source files
 FROM scratch AS sources
+# NOTE: If you have already downloaded all required source files, you can
+# put all of them into a local directory, say, sources/, then uncomment the
+# following line to replace other ADD commands in this stage:
+ADD sources /
 
 # NOTE: Even if this list is updated, BuildKit will only rebuild layers that use the updated files
-# NOTE: If you have already downloaded all required source files, you can
-# put all of them into a local directory sources/, then uncomment the following line
-# to REPLACE all ADD commands in this stage.
-# ADD sources /
-
-ADD https://download.savannah.gnu.org/releases/acl/acl-2.3.1.tar.xz .
-ADD https://download.savannah.gnu.org/releases/attr/attr-2.5.1.tar.gz .
-ADD https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.xz .
-ADD https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.xz .
-ADD https://ftp.gnu.org/gnu/bash/bash-5.1.16.tar.gz .
-ADD https://github.com/gavinhoward/bc/releases/download/5.2.2/bc-5.2.2.tar.xz .
-ADD https://ftp.gnu.org/gnu/binutils/binutils-2.38.tar.xz .
-ADD https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz .
-ADD https://www.sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz .
-ADD https://github.com/libcheck/check/releases/download/0.15.2/check-0.15.2.tar.gz .
-ADD https://ftp.gnu.org/gnu/coreutils/coreutils-9.0.tar.xz .
-ADD https://dbus.freedesktop.org/releases/dbus/dbus-1.12.20.tar.gz .
-ADD https://ftp.gnu.org/gnu/dejagnu/dejagnu-1.6.3.tar.gz .
-ADD https://ftp.gnu.org/gnu/diffutils/diffutils-3.8.tar.xz .
-ADD https://downloads.sourceforge.net/project/e2fsprogs/e2fsprogs/v1.46.5/e2fsprogs-1.46.5.tar.gz .
-ADD https://sourceware.org/ftp/elfutils/0.186/elfutils-0.186.tar.bz2 .
-ADD https://github.com/eudev-project/eudev/releases/download/v3.2.11/eudev-3.2.11.tar.gz .
-ADD https://prdownloads.sourceforge.net/expat/expat-2.4.6.tar.xz .
-ADD https://prdownloads.sourceforge.net/expect/expect5.45.4.tar.gz .
-ADD https://astron.com/pub/file/file-5.41.tar.gz .
-ADD https://ftp.gnu.org/gnu/findutils/findutils-4.9.0.tar.xz .
-ADD https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz .
-ADD https://ftp.gnu.org/gnu/gawk/gawk-5.1.1.tar.xz .
-ADD https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz .
-ADD https://ftp.gnu.org/gnu/gdbm/gdbm-1.23.tar.gz .
-ADD https://ftp.gnu.org/gnu/gettext/gettext-0.21.tar.xz .
-ADD https://ftp.gnu.org/gnu/glibc/glibc-2.35.tar.xz .
-ADD https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz .
-ADD https://ftp.gnu.org/gnu/gperf/gperf-3.1.tar.gz .
-ADD https://ftp.gnu.org/gnu/grep/grep-3.7.tar.xz .
-ADD https://ftp.gnu.org/gnu/groff/groff-1.22.4.tar.gz .
-ADD https://ftp.gnu.org/gnu/grub/grub-2.06.tar.xz .
-ADD https://ftp.gnu.org/gnu/gzip/gzip-1.11.tar.xz .
-ADD https://github.com/Mic92/iana-etc/releases/download/20220207/iana-etc-20220207.tar.gz .
-ADD https://ftp.gnu.org/gnu/inetutils/inetutils-2.2.tar.xz .
-ADD https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz .
-ADD https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-5.16.0.tar.xz .
-ADD https://files.pythonhosted.org/packages/source/J/Jinja2/Jinja2-3.0.3.tar.gz .
-ADD https://www.kernel.org/pub/linux/utils/kbd/kbd-2.4.0.tar.xz .
-ADD https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-29.tar.xz .
-ADD https://www.greenwoodsoftware.com/less/less-590.tar.gz .
-ADD https://www.linuxfromscratch.org/lfs/downloads/11.1/lfs-bootscripts-20210608.tar.xz .
-ADD https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.63.tar.xz .
-ADD https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz .
-ADD https://download.savannah.gnu.org/releases/libpipeline/libpipeline-1.5.5.tar.gz .
-ADD https://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.xz .
-ADD https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.16.9.tar.xz .
-ADD https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.xz .
-ADD https://ftp.gnu.org/gnu/make/make-4.3.tar.gz .
-ADD https://download.savannah.gnu.org/releases/man-db/man-db-2.10.1.tar.xz .
-ADD https://www.kernel.org/pub/linux/docs/man-pages/man-pages-5.13.tar.xz .
-ADD https://files.pythonhosted.org/packages/source/M/MarkupSafe/MarkupSafe-2.0.1.tar.gz .
-ADD https://github.com/mesonbuild/meson/releases/download/0.61.1/meson-0.61.1.tar.gz .
-ADD https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz .
-ADD https://www.mpfr.org/mpfr-4.1.0/mpfr-4.1.0.tar.xz .
-ADD https://invisible-mirror.net/archives/ncurses/ncurses-6.3.tar.gz .
-ADD https://github.com/ninja-build/ninja/archive/v1.10.2/ninja-1.10.2.tar.gz .
-ADD https://www.openssl.org/source/openssl-3.0.1.tar.gz .
-ADD https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz .
-ADD https://www.cpan.org/src/5.0/perl-5.34.0.tar.xz .
-ADD https://pkg-config.freedesktop.org/releases/pkg-config-0.29.2.tar.gz .
-ADD https://sourceforge.net/projects/procps-ng/files/Production/procps-ng-3.3.17.tar.xz .
-ADD https://sourceforge.net/projects/psmisc/files/psmisc/psmisc-23.4.tar.xz .
-ADD https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tar.xz .
-ADD https://www.python.org/ftp/python/doc/3.10.2/python-3.10.2-docs-html.tar.bz2 .
-ADD https://ftp.gnu.org/gnu/readline/readline-8.1.2.tar.gz .
-ADD https://ftp.gnu.org/gnu/sed/sed-4.8.tar.xz .
-ADD https://github.com/shadow-maint/shadow/releases/download/v4.11.1/shadow-4.11.1.tar.xz .
-ADD https://www.infodrom.org/projects/sysklogd/download/sysklogd-1.5.1.tar.gz .
-ADD https://github.com/systemd/systemd/archive/v250/systemd-250.tar.gz .
-ADD https://anduin.linuxfromscratch.org/LFS/systemd-man-pages-250.tar.xz .
-ADD https://download.savannah.gnu.org/releases/sysvinit/sysvinit-3.01.tar.xz .
-ADD https://ftp.gnu.org/gnu/tar/tar-1.34.tar.xz .
-ADD https://downloads.sourceforge.net/tcl/tcl8.6.12-src.tar.gz .
-ADD https://downloads.sourceforge.net/tcl/tcl8.6.12-html.tar.gz .
-ADD https://ftp.gnu.org/gnu/texinfo/texinfo-6.8.tar.xz .
-ADD https://www.iana.org/time-zones/repository/releases/tzdata2021e.tar.gz .
-ADD https://anduin.linuxfromscratch.org/LFS/udev-lfs-20171102.tar.xz .
-ADD https://www.kernel.org/pub/linux/utils/util-linux/v2.37/util-linux-2.37.4.tar.xz .
-ADD https://anduin.linuxfromscratch.org/LFS/vim-8.2.4383.tar.gz .
-ADD https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.46.tar.gz .
-ADD https://tukaani.org/xz/xz-5.2.5.tar.xz .
-ADD https://zlib.net/zlib-1.2.12.tar.xz .
-ADD https://github.com/facebook/zstd/releases/download/v1.5.2/zstd-1.5.2.tar.gz .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/binutils-2.38-lto_fix-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/bzip2-1.0.8-install_docs-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-i18n-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-chmod_fix-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/glibc-2.35-fhs-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/kbd-2.4.0-backspace-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/perl-5.34.0-upstream_fixes-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/sysvinit-3.01-consolidated-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/systemd-250-upstream_fixes-1.patch .
-ADD https://www.busybox.net/downloads/binaries/1.28.1-defconfig-multiarch/busybox-x86_64 .
+# ADD https://download.savannah.gnu.org/releases/acl/acl-2.3.1.tar.xz .
+# ADD https://download.savannah.gnu.org/releases/attr/attr-2.5.1.tar.gz .
+# ADD https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.xz .
+# ADD https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.xz .
+# ADD https://ftp.gnu.org/gnu/bash/bash-5.1.16.tar.gz .
+# ADD https://github.com/gavinhoward/bc/releases/download/5.2.2/bc-5.2.2.tar.xz .
+# ADD https://ftp.gnu.org/gnu/binutils/binutils-2.38.tar.xz .
+# ADD https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz .
+# ADD https://www.sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz .
+# ADD https://github.com/libcheck/check/releases/download/0.15.2/check-0.15.2.tar.gz .
+# ADD https://ftp.gnu.org/gnu/coreutils/coreutils-9.0.tar.xz .
+# ADD https://dbus.freedesktop.org/releases/dbus/dbus-1.12.20.tar.gz .
+# ADD https://ftp.gnu.org/gnu/dejagnu/dejagnu-1.6.3.tar.gz .
+# ADD https://ftp.gnu.org/gnu/diffutils/diffutils-3.8.tar.xz .
+# ADD https://downloads.sourceforge.net/project/e2fsprogs/e2fsprogs/v1.46.5/e2fsprogs-1.46.5.tar.gz .
+# ADD https://sourceware.org/ftp/elfutils/0.186/elfutils-0.186.tar.bz2 .
+# ADD https://github.com/eudev-project/eudev/releases/download/v3.2.11/eudev-3.2.11.tar.gz .
+# ADD https://prdownloads.sourceforge.net/expat/expat-2.4.6.tar.xz .
+# ADD https://prdownloads.sourceforge.net/expect/expect5.45.4.tar.gz .
+# ADD https://astron.com/pub/file/file-5.41.tar.gz .
+# ADD https://ftp.gnu.org/gnu/findutils/findutils-4.9.0.tar.xz .
+# ADD https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz .
+# ADD https://ftp.gnu.org/gnu/gawk/gawk-5.1.1.tar.xz .
+# ADD https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz .
+# ADD https://ftp.gnu.org/gnu/gdbm/gdbm-1.23.tar.gz .
+# ADD https://ftp.gnu.org/gnu/gettext/gettext-0.21.tar.xz .
+# ADD https://ftp.gnu.org/gnu/glibc/glibc-2.35.tar.xz .
+# ADD https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz .
+# ADD https://ftp.gnu.org/gnu/gperf/gperf-3.1.tar.gz .
+# ADD https://ftp.gnu.org/gnu/grep/grep-3.7.tar.xz .
+# ADD https://ftp.gnu.org/gnu/groff/groff-1.22.4.tar.gz .
+# ADD https://ftp.gnu.org/gnu/grub/grub-2.06.tar.xz .
+# ADD https://ftp.gnu.org/gnu/gzip/gzip-1.11.tar.xz .
+# ADD https://github.com/Mic92/iana-etc/releases/download/20220207/iana-etc-20220207.tar.gz .
+# ADD https://ftp.gnu.org/gnu/inetutils/inetutils-2.2.tar.xz .
+# ADD https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz .
+# ADD https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-5.16.0.tar.xz .
+# ADD https://files.pythonhosted.org/packages/source/J/Jinja2/Jinja2-3.0.3.tar.gz .
+# ADD https://www.kernel.org/pub/linux/utils/kbd/kbd-2.4.0.tar.xz .
+# ADD https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-29.tar.xz .
+# ADD https://www.greenwoodsoftware.com/less/less-590.tar.gz .
+# ADD https://www.linuxfromscratch.org/lfs/downloads/11.1/lfs-bootscripts-20210608.tar.xz .
+# ADD https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.63.tar.xz .
+# ADD https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz .
+# ADD https://download.savannah.gnu.org/releases/libpipeline/libpipeline-1.5.5.tar.gz .
+# ADD https://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.xz .
+# ADD https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.16.9.tar.xz .
+# ADD https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.xz .
+# ADD https://ftp.gnu.org/gnu/make/make-4.3.tar.gz .
+# ADD https://download.savannah.gnu.org/releases/man-db/man-db-2.10.1.tar.xz .
+# ADD https://www.kernel.org/pub/linux/docs/man-pages/man-pages-5.13.tar.xz .
+# ADD https://files.pythonhosted.org/packages/source/M/MarkupSafe/MarkupSafe-2.0.1.tar.gz .
+# ADD https://github.com/mesonbuild/meson/releases/download/0.61.1/meson-0.61.1.tar.gz .
+# ADD https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz .
+# ADD https://www.mpfr.org/mpfr-4.1.0/mpfr-4.1.0.tar.xz .
+# ADD https://invisible-mirror.net/archives/ncurses/ncurses-6.3.tar.gz .
+# ADD https://github.com/ninja-build/ninja/archive/v1.10.2/ninja-1.10.2.tar.gz .
+# ADD https://www.openssl.org/source/openssl-3.0.1.tar.gz .
+# ADD https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz .
+# ADD https://www.cpan.org/src/5.0/perl-5.34.0.tar.xz .
+# ADD https://pkg-config.freedesktop.org/releases/pkg-config-0.29.2.tar.gz .
+# ADD https://sourceforge.net/projects/procps-ng/files/Production/procps-ng-3.3.17.tar.xz .
+# ADD https://sourceforge.net/projects/psmisc/files/psmisc/psmisc-23.4.tar.xz .
+# ADD https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tar.xz .
+# ADD https://www.python.org/ftp/python/doc/3.10.2/python-3.10.2-docs-html.tar.bz2 .
+# ADD https://ftp.gnu.org/gnu/readline/readline-8.1.2.tar.gz .
+# ADD https://ftp.gnu.org/gnu/sed/sed-4.8.tar.xz .
+# ADD https://github.com/shadow-maint/shadow/releases/download/v4.11.1/shadow-4.11.1.tar.xz .
+# ADD https://www.infodrom.org/projects/sysklogd/download/sysklogd-1.5.1.tar.gz .
+# ADD https://github.com/systemd/systemd/archive/v250/systemd-250.tar.gz .
+# ADD https://anduin.linuxfromscratch.org/LFS/systemd-man-pages-250.tar.xz .
+# ADD https://download.savannah.gnu.org/releases/sysvinit/sysvinit-3.01.tar.xz .
+# ADD https://ftp.gnu.org/gnu/tar/tar-1.34.tar.xz .
+# ADD https://downloads.sourceforge.net/tcl/tcl8.6.12-src.tar.gz .
+# ADD https://downloads.sourceforge.net/tcl/tcl8.6.12-html.tar.gz .
+# ADD https://ftp.gnu.org/gnu/texinfo/texinfo-6.8.tar.xz .
+# ADD https://www.iana.org/time-zones/repository/releases/tzdata2021e.tar.gz .
+# ADD https://anduin.linuxfromscratch.org/LFS/udev-lfs-20171102.tar.xz .
+# ADD https://www.kernel.org/pub/linux/utils/util-linux/v2.37/util-linux-2.37.4.tar.xz .
+# ADD https://anduin.linuxfromscratch.org/LFS/vim-8.2.4383.tar.gz .
+# ADD https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.46.tar.gz .
+# ADD https://tukaani.org/xz/xz-5.2.5.tar.xz .
+# ADD https://zlib.net/zlib-1.2.12.tar.xz .
+# ADD https://github.com/facebook/zstd/releases/download/v1.5.2/zstd-1.5.2.tar.gz .
+# ADD https://www.linuxfromscratch.org/patches/lfs/11.1/binutils-2.38-lto_fix-1.patch .
+# ADD https://www.linuxfromscratch.org/patches/lfs/11.1/bzip2-1.0.8-install_docs-1.patch .
+# ADD https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-i18n-1.patch .
+# ADD https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-chmod_fix-1.patch .
+# ADD https://www.linuxfromscratch.org/patches/lfs/11.1/glibc-2.35-fhs-1.patch .
+# ADD https://www.linuxfromscratch.org/patches/lfs/11.1/kbd-2.4.0-backspace-1.patch .
+# ADD https://www.linuxfromscratch.org/patches/lfs/11.1/perl-5.34.0-upstream_fixes-1.patch .
+# ADD https://www.linuxfromscratch.org/patches/lfs/11.1/sysvinit-3.01-consolidated-1.patch .
+# ADD https://www.linuxfromscratch.org/patches/lfs/11.1/systemd-250-upstream_fixes-1.patch .
+# ADD https://www.busybox.net/downloads/binaries/1.28.1-defconfig-multiarch/busybox-x86_64 .
 
 #################
-# Image 1. Host #
+# Stage 1. Host #
 #################
 FROM alpine:3.16 AS host
 ARG SH
 
 # 2.2. Host System Requirements
-# TODO: remove the mirrors here
 RUN apk add --no-cache \
-        --repository https://mirrors.ustc.edu.cn/alpine/v3.16/main/ \
-        --repository https://mirrors.ustc.edu.cn/alpine/v3.16/community/ \
-        --repositories-file /dev/null \
         bash binutils bison \
         coreutils diffutils findutils \
         gawk gcc g++ grep gzip m4 make \
@@ -596,7 +589,7 @@ USER root
 RUN chown -R root:root $LFS
 
 ######################
-# Image 2. Toolchain #
+# State 2. Toolchain #
 ######################
 FROM scratch AS toolchain
 ARG SH
@@ -829,7 +822,7 @@ EOT
 ###############################
 
 ###################
-# Image 3. System #
+# Stage 3. System #
 ###################
 FROM toolchain AS system
 ARG SH
@@ -2370,7 +2363,7 @@ RUN --mount=type=tmpfs \
     make mrproper
     make defconfig
     # Edit required flags
-    scripts/kconfig/merge_config.sh .config <<-'EOT2'
+    cat <<'EOT2' > override.config
 # Config required by LFS
 CONFIG_AUDIT=n
 CONFIG_IKHEADERS=n
@@ -2408,6 +2401,7 @@ CONFIG_OVERLAY_FS=y
 # Suppress stack usage prompt
 CONFIG_DEBUG_STACK_USAGE=n
 EOT2
+    scripts/kconfig/merge_config.sh .config override.config
     make
     make modules_install
     cp -iv arch/x86/boot/bzImage /boot/vmlinuz-5.16.9
@@ -2428,16 +2422,12 @@ WORKDIR /
 RUN echo 'PS1='"'"'\u@\h:\w\$ '"'" >> /etc/profile
 
 ########################
-# Image 4. ISO Builder #
+# Stage 4. ISO Builder #
 ########################
 FROM alpine:3.16 AS iso-builder
 ARG SH
 
-# TODO: remove the mirrors here
 RUN apk add --no-cache \
-        --repository https://mirrors.ustc.edu.cn/alpine/v3.16/main/ \
-        --repository https://mirrors.ustc.edu.cn/alpine/v3.16/community/ \
-        --repositories-file /dev/null \
         squashfs-tools xorriso cpio wget \
         dosfstools mtools \
         grub grub-efi grub-bios
@@ -2473,9 +2463,18 @@ EOT
 
 RUN mkdir -pv lfs/proc lfs/sys lfs/dev
 
+# The system image will be named system-<hash>.squashfs
+# to avoid conflicts
+ARG SYSTEM_IMAGE_SUM=/build/system.squashfs.sum
 RUN <<'EOT' $SH
     mksquashfs lfs iso_root/system.squashfs
     rm -r lfs
+
+    # Compute a hash of system.squashfs for later use
+    sum=$(sha256sum iso_root/system.squashfs)
+    sum=${sum:0:8}
+    echo $sum > $SYSTEM_IMAGE_SUM
+    mv iso_root/system.squashfs iso_root/system-$(cat $SYSTEM_IMAGE_SUM).squashfs
 EOT
 
 ##################
@@ -2485,7 +2484,10 @@ EOT
 WORKDIR /build/initramfs_root
 
 RUN mkdir -pv bin lib dev proc sys tmp
-ADD <<-'EOT' init
+# NOTE: most of the dollar signs need to be quoted to avoid early evaluation,
+# except for the ones referencing SYSTEM_IMAGE_SUM which has to be evaluated
+# during build
+RUN cat <<EOT > init
 #!/bin/sh
 
 # Mount all essential virtual file systems
@@ -2494,45 +2496,47 @@ mount -t proc      proc      /proc
 mount -t sysfs     sysfs     /sys
 mount -t tmpfs     tmpfs     /tmp
 
+SYSTEM_IMAGE=system-$(cat $SYSTEM_IMAGE_SUM).squashfs
+
 cd /tmp
 mkdir -p boot lower upper work system
 
 # Find the boot device and switch_root
 find_system() {
     IFS="
-"; for device in $(blkid); do
-        dev_path=$(echo $device | cut -d ":" -f 1)
+"; for device in \$(blkid); do
+        dev_path=\$(echo \$device | cut -d ":" -f 1)
 
-        echo "Checking if $dev_path is the boot device"
+        echo "Checking if \$dev_path is the boot device"
 
-        # Check if a device contains system.squashfs
-        # If so, mount system.squashfs and switch_root to it
-        if ! mount $dev_path boot; then
-            echo "Failed to mount device $dev_path"
+        # Check if a device contains \$SYSTEM_IMAGE
+        # If so, mount \$SYSTEM_IMAGE and switch_root to it
+        if ! mount \$dev_path boot; then
+            echo "Failed to mount device \$dev_path"
             continue
         fi
 
-        if ! [ -e boot/system.squashfs ]; then
-            echo "Failed to find system.squashfs on $dev_path"
+        if ! [ -e boot/\$SYSTEM_IMAGE ]; then
+            echo "Failed to find \$SYSTEM_IMAGE on \$dev_path"
             umount boot
             continue
         fi
 
-        # Mount system.squashfs
-        if ! mount -t squashfs boot/system.squashfs lower; then
-            echo "Failed to mount system.squashfs on $dev_path"
+        # Mount \$SYSTEM_IMAGE
+        if ! mount -t squashfs boot/\$SYSTEM_IMAGE lower; then
+            echo "Failed to mount \$SYSTEM_IMAGE on \$dev_path"
             exec sh
         fi
 
-        # Add an overlay fs on top of system.squashfs
+        # Add an overlay fs on top of \$SYSTEM_IMAGE
         if ! mount -t overlay \
                 -o lowerdir=/tmp/lower,upperdir=/tmp/upper,workdir=/tmp/work \
                 overlay system; then
-            echo "Failed to mount overlayfs for $dev_path"
+            echo "Failed to mount overlayfs for \$dev_path"
             exec sh
         fi
 
-        echo "Found boot device $dev_path, switch_root now"
+        echo "Found boot device \$dev_path, switch_root now"
         exec switch_root system /sbin/init
     done
 
@@ -2598,11 +2602,11 @@ EOT
 
 # Prepare image for UEFI booting
 # TODO: check if the size of efi.img is large enough
-ADD <<-'EOT' tmp/grub-stub.cfg
+RUN cat <<EOT > tmp/grub-stub.cfg
 # Trying to find a device containing the file /system.squashfs
 # as the new root. TODO: This may not be reliable.
-search --set=root --file /system.squashfs
-set prefix=($root)/boot/grub
+search --set=root --file /system-$(cat $SYSTEM_IMAGE_SUM).squashfs
+set prefix=(\$root)/boot/grub
 configfile /boot/grub/grub.cfg
 EOT
 
@@ -2671,7 +2675,7 @@ RUN rm -rv tmp && \
 WORKDIR /build
 
 ###############################
-# Image 5. The Final Artifact #
+# Stage 5. The Final Artifact #
 ###############################
 FROM scratch
 COPY --from=iso-builder /build/lfs.iso /
