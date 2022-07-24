@@ -290,7 +290,7 @@ EOT
 
 # 5.6. Libstdc++ from GCC-11.2.0, Pass 1
 RUN --mount=type=tmpfs \
-    --mount=from=sources,source=glibc-2.35.tar.xz,target=glibc-2.35.tar.xz \
+    --mount=from=sources,source=gcc-11.2.0.tar.xz,target=gcc-11.2.0.tar.xz \
 <<'EOT' $SH
     tar -xf gcc-11.2.0.tar.xz
     pushd gcc-11.2.0
@@ -1730,6 +1730,7 @@ EOT
 # 8.50. Python-3.10.2
 RUN --mount=type=tmpfs \
     --mount=from=sources,source=Python-3.10.2.tar.xz,target=Python-3.10.2.tar.xz \
+    --mount=from=sources,source=python-3.10.2-docs-html.tar.bz2,target=python-3.10.2-docs-html.tar.bz2 \
 <<'EOT' $SH
     tar -xf Python-3.10.2.tar.xz
     cd Python-3.10.2
@@ -2090,6 +2091,7 @@ EOT
 RUN --mount=type=tmpfs \
     --mount=from=sources,source=systemd-250.tar.gz,target=systemd-250.tar.gz \
     --mount=from=sources,source=systemd-250-upstream_fixes-1.patch,target=systemd-250-upstream_fixes-1.patch \
+    --mount=from=sources,source=systemd-man-pages-250.tar.xz,target=systemd-man-pages-250.tar.xz \
 <<'EOT' $SH
     tar -xf systemd-250.tar.gz
     cd systemd-250
@@ -2261,7 +2263,7 @@ online_usrlib="libbfd-2.38.so
                libncursesw.so.6.3
                libm.so.6
                libreadline.so.8.1
-               libz.so.1.2.11
+               libz.so.1.2.12
                $(cd /usr/lib; find libnss*.so* -type f)"
 
 for BIN in $online_usrbin; do
@@ -2273,7 +2275,8 @@ done
 
 for LIB in $online_usrlib; do
     cp /usr/lib/$LIB /tmp/$LIB
-    strip --strip-unneeded /tmp/$LIB
+    # Some files may have unrecognized format so we need to ignore some errors
+    strip --strip-unneeded /tmp/$LIB || true
     install -vm755 /tmp/$LIB /usr/lib
     rm /tmp/$LIB
 done
@@ -2284,7 +2287,7 @@ for i in $(find /usr/lib -type f -name \*.so* ! -name \*dbg) \
     case "$online_usrbin $online_usrlib $save_usrlib" in
         *$(basename $i)* )
             ;;
-        * ) strip --strip-unneeded $i
+        * ) strip --strip-unneeded $i || true
             ;;
     esac
 done
@@ -2368,7 +2371,7 @@ RUN --mount=type=tmpfs \
     make mrproper
     make defconfig
     # Edit required flags
-    scripts/kconfig/merge_config.sh .config <<-'EOC'
+    scripts/kconfig/merge_config.sh .config <<-'EOT2'
 # Config required by LFS
 CONFIG_AUDIT=n
 CONFIG_IKHEADERS=n
@@ -2405,7 +2408,7 @@ CONFIG_OVERLAY_FS=y
 
 # Suppress stack usage prompt
 CONFIG_DEBUG_STACK_USAGE=n
-EOC
+EOT2
     make
     make modules_install
     cp -iv arch/x86/boot/bzImage /boot/vmlinuz-5.16.9
