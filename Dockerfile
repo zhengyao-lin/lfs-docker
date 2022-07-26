@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1.4
 # BuildKit is required to build this Dockerfile
 
-# Based on LFS 11.1-systemd (March 1st, 2022)
+# Based on adaptation of LFS 11.0-systemd to ARM
+# https://linuxfromscratch.org/~kb0iic/lfs-systemd/index.html
 
 ###############################
 # II. Preparing for the Build #
@@ -10,124 +11,228 @@
 # All multi-line scripts are run using this command
 ARG SH="sh -eu"
 
+# Architecture
+ARG TARGET_ARCH=aarch64
+ARG DOCKER_ARCH=arm64v8
+ARG BUSYBOX_ARCH=armv8l
+
 ARG LFS=/lfs
-ARG LFS_TGT=x86_64-lfs-linux-gnu
+ARG LFS_TGT=${TARGET_ARCH}-lfs-linux-gnu
 ARG LFS_USER=lfs
 ARG LFS_GROUOP=lfs
 ARG LFS_HOSTNAME=lfs
-ARG ENABLE_TESTS=false
-ARG MAKEFLAGS=-j8
 
+# Build options
+ARG ENABLE_TESTS=false
+ARG MAKEFLAGS=-j32
+
+# Final bootable ISO image options
+ARG ISO_IMAGE_NAME=lfs-$TARGET_ARCH.iso
 ARG ISO_VOLUME_ID=LFS
 ARG ISO_GRUB_PRELOAD_MODULES="part_gpt part_msdos linux normal iso9660 udf all_video video_fb search configfile echo cat"
 
 # Source files
 FROM scratch AS sources
+ARG BUSYBOX_ARCH
+
 # NOTE: If you have already downloaded all required source files, you can
 # put all of them into a local directory, say, sources/, then uncomment the
-# following line to replace other ADD commands in this stage:
-# ADD sources /
+# following lines to replace other ADD commands in this stage:
+COPY --chmod=744 sources/acl-2.3.1.tar.xz .
+COPY --chmod=744 sources/attr-2.5.1.tar.gz .
+COPY --chmod=744 sources/autoconf-2.71.tar.xz .
+COPY --chmod=744 sources/automake-1.16.5.tar.xz .
+COPY --chmod=744 sources/bash-5.1.16.tar.gz .
+COPY --chmod=744 sources/bc-5.2.2.tar.xz .
+COPY --chmod=744 sources/binutils-2.38.tar.xz .
+COPY --chmod=744 sources/bison-3.8.2.tar.xz .
+COPY --chmod=744 sources/bzip2-1.0.8.tar.gz .
+COPY --chmod=744 sources/check-0.15.2.tar.gz .
+COPY --chmod=744 sources/coreutils-9.0.tar.xz .
+COPY --chmod=744 sources/dbus-1.12.20.tar.gz .
+COPY --chmod=744 sources/dejagnu-1.6.3.tar.gz .
+COPY --chmod=744 sources/diffutils-3.8.tar.xz .
+COPY --chmod=744 sources/e2fsprogs-1.46.5.tar.gz .
+COPY --chmod=744 sources/elfutils-0.186.tar.bz2 .
+COPY --chmod=744 sources/eudev-3.2.11.tar.gz .
+COPY --chmod=744 sources/expat-2.4.6.tar.xz .
+COPY --chmod=744 sources/expect5.45.4.tar.gz .
+COPY --chmod=744 sources/file-5.41.tar.gz .
+COPY --chmod=744 sources/findutils-4.9.0.tar.xz .
+COPY --chmod=744 sources/flex-2.6.4.tar.gz .
+COPY --chmod=744 sources/gawk-5.1.1.tar.xz .
+COPY --chmod=744 sources/gcc-11.2.0.tar.xz .
+COPY --chmod=744 sources/gdbm-1.23.tar.gz .
+COPY --chmod=744 sources/gettext-0.21.tar.xz .
+COPY --chmod=744 sources/glibc-2.35.tar.xz .
+COPY --chmod=744 sources/gmp-6.2.1.tar.xz .
+COPY --chmod=744 sources/gperf-3.1.tar.gz .
+COPY --chmod=744 sources/grep-3.7.tar.xz .
+COPY --chmod=744 sources/groff-1.22.4.tar.gz .
+COPY --chmod=744 sources/grub-2.06.tar.xz .
+COPY --chmod=744 sources/gzip-1.11.tar.xz .
+COPY --chmod=744 sources/iana-etc-20220207.tar.gz .
+COPY --chmod=744 sources/inetutils-2.2.tar.xz .
+COPY --chmod=744 sources/intltool-0.51.0.tar.gz .
+COPY --chmod=744 sources/iproute2-5.16.0.tar.xz .
+COPY --chmod=744 sources/Jinja2-3.0.3.tar.gz .
+COPY --chmod=744 sources/kbd-2.4.0.tar.xz .
+COPY --chmod=744 sources/kmod-29.tar.xz .
+COPY --chmod=744 sources/less-590.tar.gz .
+COPY --chmod=744 sources/lfs-bootscripts-20210608.tar.xz .
+COPY --chmod=744 sources/libcap-2.63.tar.xz .
+COPY --chmod=744 sources/libffi-3.4.2.tar.gz .
+COPY --chmod=744 sources/libpipeline-1.5.5.tar.gz .
+COPY --chmod=744 sources/libtool-2.4.6.tar.xz .
+COPY --chmod=744 sources/linux-5.16.9.tar.xz .
+COPY --chmod=744 sources/m4-1.4.19.tar.xz .
+COPY --chmod=744 sources/make-4.3.tar.gz .
+COPY --chmod=744 sources/man-db-2.10.1.tar.xz .
+COPY --chmod=744 sources/man-pages-5.13.tar.xz .
+COPY --chmod=744 sources/MarkupSafe-2.0.1.tar.gz .
+COPY --chmod=744 sources/meson-0.61.1.tar.gz .
+COPY --chmod=744 sources/mpc-1.2.1.tar.gz .
+COPY --chmod=744 sources/mpfr-4.1.0.tar.xz .
+COPY --chmod=744 sources/ncurses-6.3.tar.gz .
+COPY --chmod=744 sources/ninja-1.10.2.tar.gz .
+COPY --chmod=744 sources/openssl-3.0.1.tar.gz .
+COPY --chmod=744 sources/patch-2.7.6.tar.xz .
+COPY --chmod=744 sources/perl-5.34.0.tar.xz .
+COPY --chmod=744 sources/pkg-config-0.29.2.tar.gz .
+COPY --chmod=744 sources/procps-ng-3.3.17.tar.xz .
+COPY --chmod=744 sources/psmisc-23.4.tar.xz .
+COPY --chmod=744 sources/Python-3.10.2.tar.xz .
+COPY --chmod=744 sources/python-3.10.2-docs-html.tar.bz2 .
+COPY --chmod=744 sources/readline-8.1.2.tar.gz .
+COPY --chmod=744 sources/sed-4.8.tar.xz .
+COPY --chmod=744 sources/shadow-4.11.1.tar.xz .
+COPY --chmod=744 sources/sysklogd-1.5.1.tar.gz .
+COPY --chmod=744 sources/systemd-250.tar.gz .
+COPY --chmod=744 sources/systemd-man-pages-250.tar.xz .
+COPY --chmod=744 sources/sysvinit-3.01.tar.xz .
+COPY --chmod=744 sources/tar-1.34.tar.xz .
+COPY --chmod=744 sources/tcl8.6.12-src.tar.gz .
+COPY --chmod=744 sources/tcl8.6.12-html.tar.gz .
+COPY --chmod=744 sources/texinfo-6.8.tar.xz .
+COPY --chmod=744 sources/tzdata2021e.tar.gz .
+COPY --chmod=744 sources/udev-lfs-20171102.tar.xz .
+COPY --chmod=744 sources/util-linux-2.37.4.tar.xz .
+COPY --chmod=744 sources/vim-8.2.4383.tar.gz .
+COPY --chmod=744 sources/XML-Parser-2.46.tar.gz .
+COPY --chmod=744 sources/xz-5.2.5.tar.xz .
+COPY --chmod=744 sources/zlib-1.2.12.tar.xz .
+COPY --chmod=744 sources/zstd-1.5.2.tar.gz .
+COPY --chmod=744 sources/binutils-2.38-lto_fix-1.patch .
+COPY --chmod=744 sources/bzip2-1.0.8-install_docs-1.patch .
+COPY --chmod=744 sources/coreutils-9.0-i18n-1.patch .
+COPY --chmod=744 sources/coreutils-9.0-chmod_fix-1.patch .
+COPY --chmod=744 sources/glibc-2.35-fhs-1.patch .
+COPY --chmod=744 sources/kbd-2.4.0-backspace-1.patch .
+COPY --chmod=744 sources/perl-5.34.0-upstream_fixes-1.patch .
+COPY --chmod=744 sources/sysvinit-3.01-consolidated-1.patch .
+COPY --chmod=744 sources/systemd-250-upstream_fixes-1.patch .
+COPY --chmod=744 sources/busybox-${BUSYBOX_ARCH} .
 
 # NOTE: Even if this list is updated, BuildKit will only rebuild layers that use the updated files
-ADD https://download.savannah.gnu.org/releases/acl/acl-2.3.1.tar.xz .
-ADD https://download.savannah.gnu.org/releases/attr/attr-2.5.1.tar.gz .
-ADD https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.xz .
-ADD https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.xz .
-ADD https://ftp.gnu.org/gnu/bash/bash-5.1.16.tar.gz .
-ADD https://github.com/gavinhoward/bc/releases/download/5.2.2/bc-5.2.2.tar.xz .
-ADD https://ftp.gnu.org/gnu/binutils/binutils-2.38.tar.xz .
-ADD https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz .
-ADD https://www.sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz .
-ADD https://github.com/libcheck/check/releases/download/0.15.2/check-0.15.2.tar.gz .
-ADD https://ftp.gnu.org/gnu/coreutils/coreutils-9.0.tar.xz .
-ADD https://dbus.freedesktop.org/releases/dbus/dbus-1.12.20.tar.gz .
-ADD https://ftp.gnu.org/gnu/dejagnu/dejagnu-1.6.3.tar.gz .
-ADD https://ftp.gnu.org/gnu/diffutils/diffutils-3.8.tar.xz .
-ADD https://downloads.sourceforge.net/project/e2fsprogs/e2fsprogs/v1.46.5/e2fsprogs-1.46.5.tar.gz .
-ADD https://sourceware.org/ftp/elfutils/0.186/elfutils-0.186.tar.bz2 .
-ADD https://github.com/eudev-project/eudev/releases/download/v3.2.11/eudev-3.2.11.tar.gz .
-ADD https://prdownloads.sourceforge.net/expat/expat-2.4.6.tar.xz .
-ADD https://prdownloads.sourceforge.net/expect/expect5.45.4.tar.gz .
-ADD https://astron.com/pub/file/file-5.41.tar.gz .
-ADD https://ftp.gnu.org/gnu/findutils/findutils-4.9.0.tar.xz .
-ADD https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz .
-ADD https://ftp.gnu.org/gnu/gawk/gawk-5.1.1.tar.xz .
-ADD https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz .
-ADD https://ftp.gnu.org/gnu/gdbm/gdbm-1.23.tar.gz .
-ADD https://ftp.gnu.org/gnu/gettext/gettext-0.21.tar.xz .
-ADD https://ftp.gnu.org/gnu/glibc/glibc-2.35.tar.xz .
-ADD https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz .
-ADD https://ftp.gnu.org/gnu/gperf/gperf-3.1.tar.gz .
-ADD https://ftp.gnu.org/gnu/grep/grep-3.7.tar.xz .
-ADD https://ftp.gnu.org/gnu/groff/groff-1.22.4.tar.gz .
-ADD https://ftp.gnu.org/gnu/grub/grub-2.06.tar.xz .
-ADD https://ftp.gnu.org/gnu/gzip/gzip-1.11.tar.xz .
-ADD https://github.com/Mic92/iana-etc/releases/download/20220207/iana-etc-20220207.tar.gz .
-ADD https://ftp.gnu.org/gnu/inetutils/inetutils-2.2.tar.xz .
-ADD https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz .
-ADD https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-5.16.0.tar.xz .
-ADD https://files.pythonhosted.org/packages/source/J/Jinja2/Jinja2-3.0.3.tar.gz .
-ADD https://www.kernel.org/pub/linux/utils/kbd/kbd-2.4.0.tar.xz .
-ADD https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-29.tar.xz .
-ADD https://www.greenwoodsoftware.com/less/less-590.tar.gz .
-ADD https://www.linuxfromscratch.org/lfs/downloads/11.1/lfs-bootscripts-20210608.tar.xz .
-ADD https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.63.tar.xz .
-ADD https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz .
-ADD https://download.savannah.gnu.org/releases/libpipeline/libpipeline-1.5.5.tar.gz .
-ADD https://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.xz .
-ADD https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.16.9.tar.xz .
-ADD https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.xz .
-ADD https://ftp.gnu.org/gnu/make/make-4.3.tar.gz .
-ADD https://download.savannah.gnu.org/releases/man-db/man-db-2.10.1.tar.xz .
-ADD https://www.kernel.org/pub/linux/docs/man-pages/man-pages-5.13.tar.xz .
-ADD https://files.pythonhosted.org/packages/source/M/MarkupSafe/MarkupSafe-2.0.1.tar.gz .
-ADD https://github.com/mesonbuild/meson/releases/download/0.61.1/meson-0.61.1.tar.gz .
-ADD https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz .
-ADD https://www.mpfr.org/mpfr-4.1.0/mpfr-4.1.0.tar.xz .
-ADD https://invisible-mirror.net/archives/ncurses/ncurses-6.3.tar.gz .
-ADD https://github.com/ninja-build/ninja/archive/v1.10.2/ninja-1.10.2.tar.gz .
-ADD https://www.openssl.org/source/openssl-3.0.1.tar.gz .
-ADD https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz .
-ADD https://www.cpan.org/src/5.0/perl-5.34.0.tar.xz .
-ADD https://pkg-config.freedesktop.org/releases/pkg-config-0.29.2.tar.gz .
-ADD https://sourceforge.net/projects/procps-ng/files/Production/procps-ng-3.3.17.tar.xz .
-ADD https://sourceforge.net/projects/psmisc/files/psmisc/psmisc-23.4.tar.xz .
-ADD https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tar.xz .
-ADD https://www.python.org/ftp/python/doc/3.10.2/python-3.10.2-docs-html.tar.bz2 .
-ADD https://ftp.gnu.org/gnu/readline/readline-8.1.2.tar.gz .
-ADD https://ftp.gnu.org/gnu/sed/sed-4.8.tar.xz .
-ADD https://github.com/shadow-maint/shadow/releases/download/v4.11.1/shadow-4.11.1.tar.xz .
-ADD https://www.infodrom.org/projects/sysklogd/download/sysklogd-1.5.1.tar.gz .
-ADD https://github.com/systemd/systemd/archive/v250/systemd-250.tar.gz .
-ADD https://anduin.linuxfromscratch.org/LFS/systemd-man-pages-250.tar.xz .
-ADD https://download.savannah.gnu.org/releases/sysvinit/sysvinit-3.01.tar.xz .
-ADD https://ftp.gnu.org/gnu/tar/tar-1.34.tar.xz .
-ADD https://downloads.sourceforge.net/tcl/tcl8.6.12-src.tar.gz .
-ADD https://downloads.sourceforge.net/tcl/tcl8.6.12-html.tar.gz .
-ADD https://ftp.gnu.org/gnu/texinfo/texinfo-6.8.tar.xz .
-ADD https://www.iana.org/time-zones/repository/releases/tzdata2021e.tar.gz .
-ADD https://anduin.linuxfromscratch.org/LFS/udev-lfs-20171102.tar.xz .
-ADD https://www.kernel.org/pub/linux/utils/util-linux/v2.37/util-linux-2.37.4.tar.xz .
-ADD https://anduin.linuxfromscratch.org/LFS/vim-8.2.4383.tar.gz .
-ADD https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.46.tar.gz .
-ADD https://tukaani.org/xz/xz-5.2.5.tar.xz .
-ADD https://zlib.net/zlib-1.2.12.tar.xz .
-ADD https://github.com/facebook/zstd/releases/download/v1.5.2/zstd-1.5.2.tar.gz .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/binutils-2.38-lto_fix-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/bzip2-1.0.8-install_docs-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-i18n-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-chmod_fix-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/glibc-2.35-fhs-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/kbd-2.4.0-backspace-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/perl-5.34.0-upstream_fixes-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/sysvinit-3.01-consolidated-1.patch .
-ADD https://www.linuxfromscratch.org/patches/lfs/11.1/systemd-250-upstream_fixes-1.patch .
-ADD https://www.busybox.net/downloads/binaries/1.28.1-defconfig-multiarch/busybox-x86_64 .
+# ADD --chmod=744 https://download.savannah.gnu.org/releases/acl/acl-2.3.1.tar.xz .
+# ADD --chmod=744 https://download.savannah.gnu.org/releases/attr/attr-2.5.1.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/bash/bash-5.1.16.tar.gz .
+# ADD --chmod=744 https://github.com/gavinhoward/bc/releases/download/5.2.2/bc-5.2.2.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/binutils/binutils-2.38.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz .
+# ADD --chmod=744 https://www.sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz .
+# ADD --chmod=744 https://github.com/libcheck/check/releases/download/0.15.2/check-0.15.2.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/coreutils/coreutils-9.0.tar.xz .
+# ADD --chmod=744 https://dbus.freedesktop.org/releases/dbus/dbus-1.12.20.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/dejagnu/dejagnu-1.6.3.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/diffutils/diffutils-3.8.tar.xz .
+# ADD --chmod=744 https://downloads.sourceforge.net/project/e2fsprogs/e2fsprogs/v1.46.5/e2fsprogs-1.46.5.tar.gz .
+# ADD --chmod=744 https://sourceware.org/ftp/elfutils/0.186/elfutils-0.186.tar.bz2 .
+# ADD --chmod=744 https://github.com/eudev-project/eudev/releases/download/v3.2.11/eudev-3.2.11.tar.gz .
+# ADD --chmod=744 https://prdownloads.sourceforge.net/expat/expat-2.4.6.tar.xz .
+# ADD --chmod=744 https://prdownloads.sourceforge.net/expect/expect5.45.4.tar.gz .
+# ADD --chmod=744 https://astron.com/pub/file/file-5.41.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/findutils/findutils-4.9.0.tar.xz .
+# ADD --chmod=744 https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/gawk/gawk-5.1.1.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/gdbm/gdbm-1.23.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/gettext/gettext-0.21.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/glibc/glibc-2.35.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/gperf/gperf-3.1.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/grep/grep-3.7.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/groff/groff-1.22.4.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/grub/grub-2.06.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/gzip/gzip-1.11.tar.xz .
+# ADD --chmod=744 https://github.com/Mic92/iana-etc/releases/download/20220207/iana-etc-20220207.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/inetutils/inetutils-2.2.tar.xz .
+# ADD --chmod=744 https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz .
+# ADD --chmod=744 https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-5.16.0.tar.xz .
+# ADD --chmod=744 https://files.pythonhosted.org/packages/source/J/Jinja2/Jinja2-3.0.3.tar.gz .
+# ADD --chmod=744 https://www.kernel.org/pub/linux/utils/kbd/kbd-2.4.0.tar.xz .
+# ADD --chmod=744 https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-29.tar.xz .
+# ADD --chmod=744 https://www.greenwoodsoftware.com/less/less-590.tar.gz .
+# ADD --chmod=744 https://www.linuxfromscratch.org/lfs/downloads/11.1/lfs-bootscripts-20210608.tar.xz .
+# ADD --chmod=744 https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.63.tar.xz .
+# ADD --chmod=744 https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz .
+# ADD --chmod=744 https://download.savannah.gnu.org/releases/libpipeline/libpipeline-1.5.5.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.xz .
+# ADD --chmod=744 https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.16.9.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/make/make-4.3.tar.gz .
+# ADD --chmod=744 https://download.savannah.gnu.org/releases/man-db/man-db-2.10.1.tar.xz .
+# ADD --chmod=744 https://www.kernel.org/pub/linux/docs/man-pages/man-pages-5.13.tar.xz .
+# ADD --chmod=744 https://files.pythonhosted.org/packages/source/M/MarkupSafe/MarkupSafe-2.0.1.tar.gz .
+# ADD --chmod=744 https://github.com/mesonbuild/meson/releases/download/0.61.1/meson-0.61.1.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz .
+# ADD --chmod=744 https://www.mpfr.org/mpfr-4.1.0/mpfr-4.1.0.tar.xz .
+# ADD --chmod=744 https://invisible-mirror.net/archives/ncurses/ncurses-6.3.tar.gz .
+# ADD --chmod=744 https://github.com/ninja-build/ninja/archive/v1.10.2/ninja-1.10.2.tar.gz .
+# ADD --chmod=744 https://www.openssl.org/source/openssl-3.0.1.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz .
+# ADD --chmod=744 https://www.cpan.org/src/5.0/perl-5.34.0.tar.xz .
+# ADD --chmod=744 https://pkg-config.freedesktop.org/releases/pkg-config-0.29.2.tar.gz .
+# ADD --chmod=744 https://sourceforge.net/projects/procps-ng/files/Production/procps-ng-3.3.17.tar.xz .
+# ADD --chmod=744 https://sourceforge.net/projects/psmisc/files/psmisc/psmisc-23.4.tar.xz .
+# ADD --chmod=744 https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tar.xz .
+# ADD --chmod=744 https://www.python.org/ftp/python/doc/3.10.2/python-3.10.2-docs-html.tar.bz2 .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/readline/readline-8.1.2.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/sed/sed-4.8.tar.xz .
+# ADD --chmod=744 https://github.com/shadow-maint/shadow/releases/download/v4.11.1/shadow-4.11.1.tar.xz .
+# ADD --chmod=744 https://www.infodrom.org/projects/sysklogd/download/sysklogd-1.5.1.tar.gz .
+# ADD --chmod=744 https://github.com/systemd/systemd/archive/v250/systemd-250.tar.gz .
+# ADD --chmod=744 https://anduin.linuxfromscratch.org/LFS/systemd-man-pages-250.tar.xz .
+# ADD --chmod=744 https://download.savannah.gnu.org/releases/sysvinit/sysvinit-3.01.tar.xz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/tar/tar-1.34.tar.xz .
+# ADD --chmod=744 https://downloads.sourceforge.net/tcl/tcl8.6.12-src.tar.gz .
+# ADD --chmod=744 https://downloads.sourceforge.net/tcl/tcl8.6.12-html.tar.gz .
+# ADD --chmod=744 https://ftp.gnu.org/gnu/texinfo/texinfo-6.8.tar.xz .
+# ADD --chmod=744 https://www.iana.org/time-zones/repository/releases/tzdata2021e.tar.gz .
+# ADD --chmod=744 https://anduin.linuxfromscratch.org/LFS/udev-lfs-20171102.tar.xz .
+# ADD --chmod=744 https://www.kernel.org/pub/linux/utils/util-linux/v2.37/util-linux-2.37.4.tar.xz .
+# ADD --chmod=744 https://anduin.linuxfromscratch.org/LFS/vim-8.2.4383.tar.gz .
+# ADD --chmod=744 https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.46.tar.gz .
+# ADD --chmod=744 https://tukaani.org/xz/xz-5.2.5.tar.xz .
+# ADD --chmod=744 https://zlib.net/zlib-1.2.12.tar.xz .
+# ADD --chmod=744 https://github.com/facebook/zstd/releases/download/v1.5.2/zstd-1.5.2.tar.gz .
+# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/binutils-2.38-lto_fix-1.patch .
+# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/bzip2-1.0.8-install_docs-1.patch .
+# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-i18n-1.patch .
+# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-chmod_fix-1.patch .
+# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/glibc-2.35-fhs-1.patch .
+# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/kbd-2.4.0-backspace-1.patch .
+# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/perl-5.34.0-upstream_fixes-1.patch .
+# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/sysvinit-3.01-consolidated-1.patch .
+# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/systemd-250-upstream_fixes-1.patch .
+# ADD --chmod=744 https://www.busybox.net/downloads/binaries/1.28.1-defconfig-multiarch/busybox-${BUSYBOX_ARCH} .
 
 #################
 # Stage 1. Host #
 #################
-FROM alpine:3.16 AS host
+FROM ${DOCKER_ARCH}/alpine:3.16 AS host
 ARG SH
 
 # 2.2. Host System Requirements
@@ -173,6 +278,7 @@ USER ${LFS_USER}
 # III. Building the LFS Cross Toolchain and Temporary Tools #
 #############################################################
 
+ARG TARGET_ARCH
 ARG LFS_TGT
 ARG MAKEFLAGS
 
@@ -210,8 +316,16 @@ RUN --mount=type=tmpfs \
     mv -v gmp-6.2.1 gmp
     tar -xf ../mpc-1.2.1.tar.gz
     mv -v mpc-1.2.1 mpc
-    sed -e '/m64=/s/lib64/lib/' \
-        -i.orig gcc/config/i386/t-linux64
+    case $TARGET_ARCH in
+        x86_64)
+            sed -e '/m64=/s/lib64/lib/' \
+                -i.orig gcc/config/i386/t-linux64
+            ;;
+        aarch64)
+            sed -e '/mabi.lp64=/s/lib64/lib/' \
+                -i.orig gcc/config/aarch64/t-aarch64-linux
+            ;;
+    esac
     mkdir -v build
     cd build
     ../configure                  \
@@ -261,8 +375,16 @@ RUN --mount=type=tmpfs \
 <<'EOT' $SH
     tar -xf glibc-2.35.tar.xz
     cd glibc-2.35
-    ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64
-    ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64/ld-lsb-x86-64.so.3
+    case $TARGET_ARCH in
+        x86_64)
+            ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64
+            ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64/ld-lsb-x86-64.so.3
+            ;;
+        aarch64)
+            ln -sfv ../lib/ld-linux-aarch64.so.1 $LFS/lib64
+            ln -sfv ../lib/ld-linux-aarch64.so.1 $LFS/lib64/ld-lsb-aarch64.so.3
+            ;;
+    esac
     patch -Np1 -i ../glibc-2.35-fhs-1.patch
     mkdir -v build
     cd build
@@ -271,7 +393,7 @@ RUN --mount=type=tmpfs \
         --prefix=/usr                      \
         --host=$LFS_TGT                    \
         --build=$(../scripts/config.guess) \
-        --enable-kernel=3.2                \
+        --enable-kernel=5.4                \
         --with-headers=$LFS/usr/include    \
         libc_cv_slibdir=/usr/lib
     make
@@ -557,8 +679,16 @@ RUN --mount=type=tmpfs \
     mv -v gmp-6.2.1 gmp
     tar -xf ../mpc-1.2.1.tar.gz
     mv -v mpc-1.2.1 mpc
-    sed -e '/m64=/s/lib64/lib/' \
-        -i.orig gcc/config/i386/t-linux64
+    case $TARGET_ARCH in
+        x86_64)
+            sed -e '/m64=/s/lib64/lib/' \
+                -i.orig gcc/config/i386/t-linux64
+            ;;
+        aarch64)
+            sed -e '/mabi.lp64=/s/lib64/lib/' \
+                -i.orig gcc/config/aarch64/t-aarch64-linux
+            ;;
+    esac
     mkdir -v build
     cd build
     mkdir -pv $LFS_TGT/libgcc
@@ -693,6 +823,7 @@ RUN <<'EOT' $SH
     chmod -v 600  /var/log/btmp
 EOT
 
+ARG TARGET_ARCH
 ARG LFS_TGT
 ARG MAKEFLAGS
 
@@ -934,8 +1065,6 @@ EOT
 ADD <<-'EOT' /etc/ld.so.conf
 /usr/local/lib
 /opt/lib
-
-# Add an include directory
 include /etc/ld.so.conf.d/*.conf
 EOT
 
@@ -1000,9 +1129,9 @@ RUN --mount=type=tmpfs \
 <<'EOT' $SH
     tar -xf xz-5.2.5.tar.xz
     cd xz-5.2.5
-    ./configure --prefix=/usr \
-        --disable-static \
-        --docdir=/usr/share/doc/xz-5.2.5
+    ./configure --prefix=/usr    \
+                --disable-static \
+                --docdir=/usr/share/doc/xz-5.2.5
     make
     if $ENABLE_TESTS; then make check; fi
     make install
@@ -1041,10 +1170,10 @@ RUN --mount=type=tmpfs \
     cd readline-8.1.2
     sed -i '/MV.*old/d' Makefile.in
     sed -i '/{OLDSUFF}/c:' support/shlib-install
-    ./configure --prefix=/usr \
-        --disable-static \
-        --with-curses    \
-        --docdir=/usr/share/doc/readline-8.1.2
+    ./configure --prefix=/usr    \
+                --disable-static \
+                --with-curses    \
+                --docdir=/usr/share/doc/readline-8.1.2
     make SHLIB_LIBS="-lncursesw"
     make SHLIB_LIBS="-lncursesw" install
     install -v -m644 doc/*.{ps,pdf,html,dvi} /usr/share/doc/readline-8.1.2
@@ -1080,9 +1209,9 @@ RUN --mount=type=tmpfs \
 <<'EOT' $SH
     tar -xf flex-2.6.4.tar.gz
     cd flex-2.6.4
-    ./configure --prefix=/usr \
-        --docdir=/usr/share/doc/flex-2.6.4 \
-        --disable-static
+    ./configure --prefix=/usr                      \
+                --docdir=/usr/share/doc/flex-2.6.4 \
+                --disable-static
     make
     if $ENABLE_TESTS; then make check; fi
     make install
@@ -1101,7 +1230,7 @@ RUN --mount=type=tmpfs \
     cd unix
     ./configure --prefix=/usr           \
                 --mandir=/usr/share/man \
-                --enable-64bit
+                $([[ $TARGET_ARCH =~ x86_64|aarch64 ]] && echo --enable-64bit)
     make
     sed -e "s|$SRCDIR/unix|/usr/lib|" \
         -e "s|$SRCDIR|/usr/include|"  \
@@ -1132,11 +1261,12 @@ RUN --mount=type=tmpfs \
 <<'EOT' $SH
     tar -xf expect5.45.4.tar.gz
     cd expect5.45.4
-    ./configure --prefix=/usr   \
-        --with-tcl=/usr/lib     \
-        --enable-shared         \
-        --mandir=/usr/share/man \
-        --with-tclinclude=/usr/include
+    ./configure --prefix=/usr                  \
+                --with-tcl=/usr/lib            \
+                --enable-shared                \
+                --mandir=/usr/share/man        \
+                --with-tclinclude=/usr/include \
+                --build=$TARGET_ARCH-unknown-linux-gnu
     make
     if $ENABLE_TESTS; then make test; fi
     make install
@@ -1169,18 +1299,22 @@ RUN --mount=type=tmpfs \
     tar -xf binutils-2.38.tar.xz
     cd binutils-2.38
     patch -Np1 -i ../binutils-2.38-lto_fix-1.patch
-    sed -e '/R_386_TLS_LE /i \   || (TYPE) == R_386_TLS_IE \\' \
-        -i ./bfd/elfxx-x86.h
+    case $TARGET_ARCH in
+        x86_64)
+            sed -e '/R_386_TLS_LE /i \   || (TYPE) == R_386_TLS_IE \\' \
+                -i ./bfd/elfxx-x86.h
+            ;;
+    esac
     mkdir -v build
     cd build
-    ../configure --prefix=/usr \
-        --enable-gold       \
-        --enable-ld=default \
-        --enable-plugins    \
-        --enable-shared     \
-        --disable-werror    \
-        --enable-64-bit-bfd \
-        --with-system-zlib
+    ../configure --prefix=/usr       \
+                 --enable-gold       \
+                 --enable-ld=default \
+                 --enable-plugins    \
+                 --enable-shared     \
+                 --disable-werror    \
+                 --enable-64-bit-bfd \
+                 --with-system-zlib
     make tooldir=/usr
     if $ENABLE_TESTS; then make -k check; fi
     make tooldir=/usr install
@@ -1195,11 +1329,10 @@ RUN --mount=type=tmpfs \
     cd gmp-6.2.1
     cp -v configfsf.guess config.guess
     cp -v configfsf.sub   config.sub
-    ./configure --prefix=/usr \
-        --enable-cxx     \
-        --disable-static \
-        --docdir=/usr/share/doc/gmp-6.2.1 \
-        --build=x86_64-pc-linux-gnu
+    ./configure --prefix=/usr    \
+                --enable-cxx     \
+                --disable-static \
+                --docdir=/usr/share/doc/gmp-6.2.1
     make
     make html
     if $ENABLE_TESTS; then \
@@ -1216,10 +1349,10 @@ RUN --mount=type=tmpfs \
 <<'EOT' $SH
     tar -xf mpfr-4.1.0.tar.xz
     cd mpfr-4.1.0
-    ./configure --prefix=/usr \
-        --disable-static     \
-        --enable-thread-safe \
-        --docdir=/usr/share/doc/mpfr-4.1.0
+    ./configure --prefix=/usr        \
+                --disable-static     \
+                --enable-thread-safe \
+                --docdir=/usr/share/doc/mpfr-4.1.0
     make
     make html
     if $ENABLE_TESTS; then make check; fi
@@ -1233,9 +1366,9 @@ RUN --mount=type=tmpfs \
 <<'EOT' $SH
     tar -xf mpc-1.2.1.tar.gz
     cd mpc-1.2.1
-    ./configure --prefix=/usr \
-        --disable-static \
-        --docdir=/usr/share/doc/mpc-1.2.1
+    ./configure --prefix=/usr    \
+                --disable-static \
+                --docdir=/usr/share/doc/mpc-1.2.1
     make
     make html
     if $ENABLE_TESTS; then make check; fi
@@ -1249,10 +1382,10 @@ RUN --mount=type=tmpfs \
 <<'EOT' $SH
     tar -xf attr-2.5.1.tar.gz
     cd attr-2.5.1
-    ./configure --prefix=/usr \
-        --disable-static  \
-        --sysconfdir=/etc \
-        --docdir=/usr/share/doc/attr-2.5.1
+    ./configure --prefix=/usr     \
+                --disable-static  \
+                --sysconfdir=/etc \
+                --docdir=/usr/share/doc/attr-2.5.1
     make
     if $ENABLE_TESTS; then make check; fi
     make install
@@ -1264,9 +1397,9 @@ RUN --mount=type=tmpfs \
 <<'EOT' $SH
     tar -xf acl-2.3.1.tar.xz
     cd acl-2.3.1
-    ./configure --prefix=/usr \
-        --disable-static      \
-        --docdir=/usr/share/doc/acl-2.3.1
+    ./configure --prefix=/usr    \
+                --disable-static \
+                --docdir=/usr/share/doc/acl-2.3.1
     make
     make install
 EOT
@@ -1326,16 +1459,24 @@ RUN --mount=type=tmpfs \
     sed -e '/static.*SIGSTKSZ/d' \
         -e 's/return kAltStackSize/return SIGSTKSZ * 4/' \
         -i libsanitizer/sanitizer_common/sanitizer_posix_libcdep.cpp
-    sed -e '/m64=/s/lib64/lib/' \
-        -i.orig gcc/config/i386/t-linux64
+    case $TARGET_ARCH in
+        x86_64)
+            sed -e '/m64=/s/lib64/lib/' \
+                -i.orig gcc/config/i386/t-linux64
+            ;;
+        aarch64)
+            sed -e '/mabi.lp64=/s/lib64/lib/' \
+                -i.orig gcc/config/aarch64/t-aarch64-linux
+            ;;
+    esac
     mkdir -v build
     cd build
-    ../configure --prefix=/usr   \
-        LD=ld                    \
-        --enable-languages=c,c++ \
-        --disable-multilib       \
-        --disable-bootstrap      \
-        --with-system-zlib
+    ../configure --prefix=/usr           \
+                LD=ld                    \
+                --enable-languages=c,c++ \
+                --disable-multilib       \
+                --disable-bootstrap      \
+                --with-system-zlib
     make
     if $ENABLE_TESTS; then \
         ulimit -s 32768
@@ -2233,7 +2374,6 @@ RUN <<'EOT' $SH
 save_usrlib="$(cd /usr/lib; ls ld-linux*)
              libc.so.6
              libthread_db.so.1
-             libquadmath.so.0.0.0
              libstdc++.so.6.0.29
              libitm.so.1.0.0
              libatomic.so.1.2.0"
@@ -2363,8 +2503,9 @@ RUN --mount=type=tmpfs \
     make mrproper
     make defconfig
     # Edit required flags
-    cat <<'EOT2' > override.config
+    cat <<EOT2 > override.config
 # Config required by LFS
+CONFIG_WERROR=n
 CONFIG_AUDIT=n
 CONFIG_IKHEADERS=n
 CONFIG_CGROUPS=y
@@ -2383,7 +2524,12 @@ CONFIG_FW_LOADER_USER_HELPER=n
 CONFIG_INOTIFY_USER=y
 CONFIG_TMPFS_POSIX_ACL=y
 
-# Support UEFI
+# Support for SCSI and CD ROM connected to SCSI
+CONFIG_SCSI=y
+CONFIG_BLK_DEV_SR=y
+CONFIG_SCSI_CONSTANTS=y
+
+# Support for UEFI
 CONFIG_EFI=y
 CONFIG_EFI_STUB=y
 CONFIG_EFI_VARS=n
@@ -2394,7 +2540,7 @@ CONFIG_FB_EFI=y
 CONFIG_FRAMEBUFFER_CONSOLE=y
 CONFIG_EFIVAR_FS=y
 
-# Add support for squashfs and overlayfs
+# Support for squashfs and overlayfs
 CONFIG_SQUASHFS=y
 CONFIG_OVERLAY_FS=y
 
@@ -2404,7 +2550,15 @@ EOT2
     scripts/kconfig/merge_config.sh .config override.config
     make
     make modules_install
-    cp -iv arch/x86/boot/bzImage /boot/vmlinuz-5.16.9
+    case $TARGET_ARCH in
+        x86_64)
+            cp -iv arch/x86/boot/bzImage /boot/vmlinuz-5.16.9
+            ;;
+        aarch64)
+            # TODO: not sure why the final kernel image is named Image instead of bzImage
+            cp -iv arch/arm64/boot/Image /boot/vmlinuz-5.16.9
+            ;;
+    esac
     cp -iv System.map /boot/System.map-5.16.9
     cp -iv .config /boot/config-5.16.9
     # Install documentation
@@ -2424,13 +2578,15 @@ RUN echo 'PS1='"'"'\u@\h:\w\$ '"'" >> /etc/profile
 ########################
 # Stage 4. ISO Builder #
 ########################
-FROM alpine:3.16 AS iso-builder
+FROM ${DOCKER_ARCH}/alpine:3.16 AS iso-builder
 ARG SH
+ARG TARGET_ARCH
 
 RUN apk add --no-cache \
         squashfs-tools xorriso cpio wget \
         dosfstools mtools \
-        grub grub-efi grub-bios
+        grub grub-efi \
+        $([[ $TARGET_ARCH = x86_64 ]] && echo grub-bios)
 
 RUN mkdir -pv /build
 
@@ -2560,9 +2716,10 @@ exec sh
 EOT
 
 # Install busybox to initramfs
-RUN --mount=from=sources,source=busybox-x86_64,target=/tmp/busybox-x86_64 \
+ARG BUSYBOX_ARCH
+RUN --mount=from=sources,source=busybox-${BUSYBOX_ARCH},target=/tmp/busybox-${BUSYBOX_ARCH} \
 <<'EOT' $SH
-    cp /tmp/busybox-x86_64 bin/busybox
+    cp /tmp/busybox-${BUSYBOX_ARCH} bin/busybox
     # Use the busybox binary on the host system to install symbolic links
     /bin/busybox --install -s bin
     chmod +x bin/busybox
@@ -2577,7 +2734,18 @@ EOT
 WORKDIR /build/iso_root
 
 # Prepare file structure
-RUN mkdir boot boot/grub boot/grub/i386-pc boot/grub/x86_64-efi
+ARG TARGET_ARCH
+RUN <<'EOT' $SH
+    mkdir -v boot boot/grub boot/grub/i386-pc boot/grub/x86_64-efi
+    case $TARGET_ARCH in
+        x86_64)
+            mkdir -v boot/grub/i386-pc boot/grub/x86_64-efi
+            ;;
+        aarch64)
+            mkdir -v boot/grub/arm64-efi
+            ;;
+    esac
+EOT
 
 # Copy kernel from the built system
 COPY --from=system /boot/vmlinuz-5.16.9 boot/vmlinuz
@@ -2589,15 +2757,17 @@ ARG ISO_GRUB_PRELOAD_MODULES
 
 RUN mkdir -pv tmp
 
-# Prepare image for BIOS booting
+# Prepare image for BIOS booting (x86 only)
 RUN <<'EOT' $SH
-    grub-mkimage        \
-        -o tmp/core.img \
-        -O i386-pc      \
-        -p /boot/grub   \
-        $ISO_GRUB_PRELOAD_MODULES biosdisk
-    cat /usr/lib/grub/i386-pc/cdboot.img tmp/core.img \
-        > boot/grub/i386-pc/eltorito.img
+    if [[ $TARGET_ARCH = x86_64 ]]; then
+        grub-mkimage        \
+            -o tmp/core.img \
+            -O i386-pc      \
+            -p /boot/grub   \
+            $ISO_GRUB_PRELOAD_MODULES biosdisk
+        cat /usr/lib/grub/i386-pc/cdboot.img tmp/core.img \
+            > boot/grub/i386-pc/eltorito.img
+    fi
 EOT
 
 # Prepare image for UEFI booting
@@ -2611,29 +2781,41 @@ configfile /boot/grub/grub.cfg
 EOT
 
 RUN <<'EOT' $SH
-    grub-mkimage             \
-        -o tmp/bootx64.efi   \
-        -O x86_64-efi        \
-        -c tmp/grub-stub.cfg \
-        -p /boot/grub        \
+    case $TARGET_ARCH in
+        x86_64)
+            image_name=bootx64.efi
+            grub_format=x86_64-efi
+            ;;
+        aarch64)
+            image_name=bootaa64.efi
+            grub_format=arm64-efi
+            ;;
+    esac
+
+    grub-mkimage              \
+        -o tmp/$image_name    \
+        -O $grub_format       \
+        -c tmp/grub-stub.cfg  \
+        -p /boot/grub         \
         $ISO_GRUB_PRELOAD_MODULES
+
     # Compute the minimal size for efi.img
-    bootx64_size=$(du tmp/bootx64.efi | cut -f 1)
-    bootx64_size=$((bootx64_size + 511))
-    num_sectors=$((bootx64_size / 512 + 1))
+    image_size=$(du tmp/$image_name | cut -f 1)
+    image_size=$((image_size + 511))
+    num_sectors=$((image_size / 512 + 1))
     num_sectors=$((num_sectors < 1440 ? 1440 : num_sectors))
-    # Create a FAT-format image and copy bootx64.efi into it
+
+    # Create a FAT-format image and copy the image into it
     dd if=/dev/zero of=tmp/efi.img bs=512 count=$num_sectors
     mkfs.vfat -n ESP tmp/efi.img
     mmd -i tmp/efi.img efi efi/boot
-    mcopy -i tmp/efi.img tmp/bootx64.efi ::efi/boot/bootx64.efi
-    cp tmp/efi.img boot/grub/x86_64-efi/efi.img
-EOT
+    mcopy -i tmp/efi.img tmp/$image_name ::efi/boot/$image_name
 
-# Also copy efi/boot/bootx64.efi to the root of the ISO image
-RUN <<'EOT' $SH
+    cp tmp/efi.img boot/grub/$grub_format/efi.img
+
+    # Also copy efi/boot/$image_name to the root of the ISO image
     mkdir -pv efi/boot
-    cp -v tmp/bootx64.efi efi/boot/bootx64.efi
+    cp -v tmp/$image_name efi/boot/$image_name
 EOT
 
 ADD <<-'EOT' boot/grub/grub.cfg
@@ -2646,31 +2828,53 @@ menuentry "LFS" {
 }
 EOT
 
+# Remove tmp directory
+RUN rm -rv tmp
+
 # Make an ISO image that is bootable (supposedly)
 # from any combination of BIOS/UEFI on USB/CD
+ARG ISO_IMAGE_NAME
 ARG ISO_VOLUME_ID
-RUN rm -rv tmp && \
-    xorriso -as mkisofs                   \
-        -V $ISO_VOLUME_ID                 \
-        -c boot/boot.cat                  \
-        # First boot entry
-        -b boot/grub/i386-pc/eltorito.img \
-        -no-emul-boot                     \
-        -boot-load-size 4                 \
-        -boot-info-table                  \
-        --grub2-boot-info                 \
-        --grub2-mbr /usr/lib/grub/i386-pc/boot_hybrid.img \
-        # Second boot entry
-        -eltorito-alt-boot                \
-        -e boot/grub/x86_64-efi/efi.img   \
-        -no-emul-boot                     \
-        # -isohybrid-gpt-basdat             \
-        # Allow longer and more complex file names
-        -r -J --joliet-long               \
-        -allow-lowercase                  \
-        -allow-multidot                   \
-        -o ../lfs.iso                     \
+RUN <<'EOT' $SH
+    case $TARGET_ARCH in
+        x86_64)
+            # BIOS boot entry
+            boot_entries="
+                -b boot/grub/i386-pc/eltorito.img
+                -no-emul-boot
+                -boot-load-size 4
+                -boot-info-table
+                --grub2-boot-info
+                --grub2-mbr /usr/lib/grub/i386-pc/boot_hybrid.img
+            "
+
+            # UEFI boot entry
+            boot_entries="
+                $boot_entries
+                -eltorito-alt-boot
+                -e boot/grub/x86_64-efi/efi.img
+                -no-emul-boot
+            "
+            ;;
+        aarch64)
+            boot_entries="
+                -eltorito-alt-boot
+                -e boot/grub/arm64-efi/efi.img
+                -no-emul-boot
+            "
+            ;;
+    esac
+
+    xorriso -as mkisofs            \
+        -V $ISO_VOLUME_ID          \
+        -c boot/boot.cat           \
+        $boot_entries              \
+        -r -J --joliet-long        \
+        -allow-lowercase           \
+        -allow-multidot            \
+        -o ../$ISO_IMAGE_NAME      \
         .
+EOT
 
 WORKDIR /build
 
@@ -2678,4 +2882,5 @@ WORKDIR /build
 # Stage 5. The Final Artifact #
 ###############################
 FROM scratch
-COPY --from=iso-builder /build/lfs.iso /
+ARG ISO_IMAGE_NAME
+COPY --from=iso-builder /build/$ISO_IMAGE_NAME /
