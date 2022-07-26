@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1.4
 # BuildKit is required to build this Dockerfile
 
-# Based on adaptation of LFS 11.0-systemd to ARM
+# Based on LFS 11.1-systemd: https://www.linuxfromscratch.org/lfs/view/11.1-systemd/
+# For the aarch64 version, the following adaptation is also referenced:
 # https://linuxfromscratch.org/~kb0iic/lfs-systemd/index.html
 
 ###############################
@@ -11,13 +12,20 @@
 # All multi-line scripts are run using this command
 ARG SH="sh -eu"
 
-# Architecture
-ARG TARGET_ARCH=aarch64
-ARG DOCKER_ARCH=arm64v8
-ARG BUSYBOX_ARCH=armv8l
+# Architecture codes
+
+# For aarch64
+# ARG LFS_ARCH=aarch64
+# ARG DOCKER_ARCH=arm64v8
+# ARG BUSYBOX_ARCH=armv8l
+
+# For x86_64
+ARG LFS_ARCH=x86_64
+ARG DOCKER_ARCH=amd64
+ARG BUSYBOX_ARCH=x86_64
 
 ARG LFS=/lfs
-ARG LFS_TGT=${TARGET_ARCH}-lfs-linux-gnu
+ARG LFS_TGT=${LFS_ARCH}-lfs-linux-gnu
 ARG LFS_USER=lfs
 ARG LFS_GROUOP=lfs
 ARG LFS_HOSTNAME=lfs
@@ -27,7 +35,7 @@ ARG ENABLE_TESTS=false
 ARG MAKEFLAGS=-j32
 
 # Final bootable ISO image options
-ARG ISO_IMAGE_NAME=lfs-$TARGET_ARCH.iso
+ARG ISO_IMAGE_NAME=lfs-${LFS_ARCH}.iso
 ARG ISO_VOLUME_ID=LFS
 ARG ISO_GRUB_PRELOAD_MODULES="part_gpt part_msdos linux normal iso9660 udf all_video video_fb search configfile echo cat"
 
@@ -38,196 +46,196 @@ ARG BUSYBOX_ARCH
 # NOTE: If you have already downloaded all required source files, you can
 # put all of them into a local directory, say, sources/, then uncomment the
 # following lines to replace other ADD commands in this stage:
-COPY --chmod=744 sources/acl-2.3.1.tar.xz .
-COPY --chmod=744 sources/attr-2.5.1.tar.gz .
-COPY --chmod=744 sources/autoconf-2.71.tar.xz .
-COPY --chmod=744 sources/automake-1.16.5.tar.xz .
-COPY --chmod=744 sources/bash-5.1.16.tar.gz .
-COPY --chmod=744 sources/bc-5.2.2.tar.xz .
-COPY --chmod=744 sources/binutils-2.38.tar.xz .
-COPY --chmod=744 sources/bison-3.8.2.tar.xz .
-COPY --chmod=744 sources/bzip2-1.0.8.tar.gz .
-COPY --chmod=744 sources/check-0.15.2.tar.gz .
-COPY --chmod=744 sources/coreutils-9.0.tar.xz .
-COPY --chmod=744 sources/dbus-1.12.20.tar.gz .
-COPY --chmod=744 sources/dejagnu-1.6.3.tar.gz .
-COPY --chmod=744 sources/diffutils-3.8.tar.xz .
-COPY --chmod=744 sources/e2fsprogs-1.46.5.tar.gz .
-COPY --chmod=744 sources/elfutils-0.186.tar.bz2 .
-COPY --chmod=744 sources/eudev-3.2.11.tar.gz .
-COPY --chmod=744 sources/expat-2.4.6.tar.xz .
-COPY --chmod=744 sources/expect5.45.4.tar.gz .
-COPY --chmod=744 sources/file-5.41.tar.gz .
-COPY --chmod=744 sources/findutils-4.9.0.tar.xz .
-COPY --chmod=744 sources/flex-2.6.4.tar.gz .
-COPY --chmod=744 sources/gawk-5.1.1.tar.xz .
-COPY --chmod=744 sources/gcc-11.2.0.tar.xz .
-COPY --chmod=744 sources/gdbm-1.23.tar.gz .
-COPY --chmod=744 sources/gettext-0.21.tar.xz .
-COPY --chmod=744 sources/glibc-2.35.tar.xz .
-COPY --chmod=744 sources/gmp-6.2.1.tar.xz .
-COPY --chmod=744 sources/gperf-3.1.tar.gz .
-COPY --chmod=744 sources/grep-3.7.tar.xz .
-COPY --chmod=744 sources/groff-1.22.4.tar.gz .
-COPY --chmod=744 sources/grub-2.06.tar.xz .
-COPY --chmod=744 sources/gzip-1.11.tar.xz .
-COPY --chmod=744 sources/iana-etc-20220207.tar.gz .
-COPY --chmod=744 sources/inetutils-2.2.tar.xz .
-COPY --chmod=744 sources/intltool-0.51.0.tar.gz .
-COPY --chmod=744 sources/iproute2-5.16.0.tar.xz .
-COPY --chmod=744 sources/Jinja2-3.0.3.tar.gz .
-COPY --chmod=744 sources/kbd-2.4.0.tar.xz .
-COPY --chmod=744 sources/kmod-29.tar.xz .
-COPY --chmod=744 sources/less-590.tar.gz .
-COPY --chmod=744 sources/lfs-bootscripts-20210608.tar.xz .
-COPY --chmod=744 sources/libcap-2.63.tar.xz .
-COPY --chmod=744 sources/libffi-3.4.2.tar.gz .
-COPY --chmod=744 sources/libpipeline-1.5.5.tar.gz .
-COPY --chmod=744 sources/libtool-2.4.6.tar.xz .
-COPY --chmod=744 sources/linux-5.16.9.tar.xz .
-COPY --chmod=744 sources/m4-1.4.19.tar.xz .
-COPY --chmod=744 sources/make-4.3.tar.gz .
-COPY --chmod=744 sources/man-db-2.10.1.tar.xz .
-COPY --chmod=744 sources/man-pages-5.13.tar.xz .
-COPY --chmod=744 sources/MarkupSafe-2.0.1.tar.gz .
-COPY --chmod=744 sources/meson-0.61.1.tar.gz .
-COPY --chmod=744 sources/mpc-1.2.1.tar.gz .
-COPY --chmod=744 sources/mpfr-4.1.0.tar.xz .
-COPY --chmod=744 sources/ncurses-6.3.tar.gz .
-COPY --chmod=744 sources/ninja-1.10.2.tar.gz .
-COPY --chmod=744 sources/openssl-3.0.1.tar.gz .
-COPY --chmod=744 sources/patch-2.7.6.tar.xz .
-COPY --chmod=744 sources/perl-5.34.0.tar.xz .
-COPY --chmod=744 sources/pkg-config-0.29.2.tar.gz .
-COPY --chmod=744 sources/procps-ng-3.3.17.tar.xz .
-COPY --chmod=744 sources/psmisc-23.4.tar.xz .
-COPY --chmod=744 sources/Python-3.10.2.tar.xz .
-COPY --chmod=744 sources/python-3.10.2-docs-html.tar.bz2 .
-COPY --chmod=744 sources/readline-8.1.2.tar.gz .
-COPY --chmod=744 sources/sed-4.8.tar.xz .
-COPY --chmod=744 sources/shadow-4.11.1.tar.xz .
-COPY --chmod=744 sources/sysklogd-1.5.1.tar.gz .
-COPY --chmod=744 sources/systemd-250.tar.gz .
-COPY --chmod=744 sources/systemd-man-pages-250.tar.xz .
-COPY --chmod=744 sources/sysvinit-3.01.tar.xz .
-COPY --chmod=744 sources/tar-1.34.tar.xz .
-COPY --chmod=744 sources/tcl8.6.12-src.tar.gz .
-COPY --chmod=744 sources/tcl8.6.12-html.tar.gz .
-COPY --chmod=744 sources/texinfo-6.8.tar.xz .
-COPY --chmod=744 sources/tzdata2021e.tar.gz .
-COPY --chmod=744 sources/udev-lfs-20171102.tar.xz .
-COPY --chmod=744 sources/util-linux-2.37.4.tar.xz .
-COPY --chmod=744 sources/vim-8.2.4383.tar.gz .
-COPY --chmod=744 sources/XML-Parser-2.46.tar.gz .
-COPY --chmod=744 sources/xz-5.2.5.tar.xz .
-COPY --chmod=744 sources/zlib-1.2.12.tar.xz .
-COPY --chmod=744 sources/zstd-1.5.2.tar.gz .
-COPY --chmod=744 sources/binutils-2.38-lto_fix-1.patch .
-COPY --chmod=744 sources/bzip2-1.0.8-install_docs-1.patch .
-COPY --chmod=744 sources/coreutils-9.0-i18n-1.patch .
-COPY --chmod=744 sources/coreutils-9.0-chmod_fix-1.patch .
-COPY --chmod=744 sources/glibc-2.35-fhs-1.patch .
-COPY --chmod=744 sources/kbd-2.4.0-backspace-1.patch .
-COPY --chmod=744 sources/perl-5.34.0-upstream_fixes-1.patch .
-COPY --chmod=744 sources/sysvinit-3.01-consolidated-1.patch .
-COPY --chmod=744 sources/systemd-250-upstream_fixes-1.patch .
-COPY --chmod=744 sources/busybox-${BUSYBOX_ARCH} .
+# COPY --chmod=744 sources/acl-2.3.1.tar.xz .
+# COPY --chmod=744 sources/attr-2.5.1.tar.gz .
+# COPY --chmod=744 sources/autoconf-2.71.tar.xz .
+# COPY --chmod=744 sources/automake-1.16.5.tar.xz .
+# COPY --chmod=744 sources/bash-5.1.16.tar.gz .
+# COPY --chmod=744 sources/bc-5.2.2.tar.xz .
+# COPY --chmod=744 sources/binutils-2.38.tar.xz .
+# COPY --chmod=744 sources/bison-3.8.2.tar.xz .
+# COPY --chmod=744 sources/bzip2-1.0.8.tar.gz .
+# COPY --chmod=744 sources/check-0.15.2.tar.gz .
+# COPY --chmod=744 sources/coreutils-9.0.tar.xz .
+# COPY --chmod=744 sources/dbus-1.12.20.tar.gz .
+# COPY --chmod=744 sources/dejagnu-1.6.3.tar.gz .
+# COPY --chmod=744 sources/diffutils-3.8.tar.xz .
+# COPY --chmod=744 sources/e2fsprogs-1.46.5.tar.gz .
+# COPY --chmod=744 sources/elfutils-0.186.tar.bz2 .
+# COPY --chmod=744 sources/eudev-3.2.11.tar.gz .
+# COPY --chmod=744 sources/expat-2.4.6.tar.xz .
+# COPY --chmod=744 sources/expect5.45.4.tar.gz .
+# COPY --chmod=744 sources/file-5.41.tar.gz .
+# COPY --chmod=744 sources/findutils-4.9.0.tar.xz .
+# COPY --chmod=744 sources/flex-2.6.4.tar.gz .
+# COPY --chmod=744 sources/gawk-5.1.1.tar.xz .
+# COPY --chmod=744 sources/gcc-11.2.0.tar.xz .
+# COPY --chmod=744 sources/gdbm-1.23.tar.gz .
+# COPY --chmod=744 sources/gettext-0.21.tar.xz .
+# COPY --chmod=744 sources/glibc-2.35.tar.xz .
+# COPY --chmod=744 sources/gmp-6.2.1.tar.xz .
+# COPY --chmod=744 sources/gperf-3.1.tar.gz .
+# COPY --chmod=744 sources/grep-3.7.tar.xz .
+# COPY --chmod=744 sources/groff-1.22.4.tar.gz .
+# COPY --chmod=744 sources/grub-2.06.tar.xz .
+# COPY --chmod=744 sources/gzip-1.11.tar.xz .
+# COPY --chmod=744 sources/iana-etc-20220207.tar.gz .
+# COPY --chmod=744 sources/inetutils-2.2.tar.xz .
+# COPY --chmod=744 sources/intltool-0.51.0.tar.gz .
+# COPY --chmod=744 sources/iproute2-5.16.0.tar.xz .
+# COPY --chmod=744 sources/Jinja2-3.0.3.tar.gz .
+# COPY --chmod=744 sources/kbd-2.4.0.tar.xz .
+# COPY --chmod=744 sources/kmod-29.tar.xz .
+# COPY --chmod=744 sources/less-590.tar.gz .
+# COPY --chmod=744 sources/lfs-bootscripts-20210608.tar.xz .
+# COPY --chmod=744 sources/libcap-2.63.tar.xz .
+# COPY --chmod=744 sources/libffi-3.4.2.tar.gz .
+# COPY --chmod=744 sources/libpipeline-1.5.5.tar.gz .
+# COPY --chmod=744 sources/libtool-2.4.6.tar.xz .
+# COPY --chmod=744 sources/linux-5.16.9.tar.xz .
+# COPY --chmod=744 sources/m4-1.4.19.tar.xz .
+# COPY --chmod=744 sources/make-4.3.tar.gz .
+# COPY --chmod=744 sources/man-db-2.10.1.tar.xz .
+# COPY --chmod=744 sources/man-pages-5.13.tar.xz .
+# COPY --chmod=744 sources/MarkupSafe-2.0.1.tar.gz .
+# COPY --chmod=744 sources/meson-0.61.1.tar.gz .
+# COPY --chmod=744 sources/mpc-1.2.1.tar.gz .
+# COPY --chmod=744 sources/mpfr-4.1.0.tar.xz .
+# COPY --chmod=744 sources/ncurses-6.3.tar.gz .
+# COPY --chmod=744 sources/ninja-1.10.2.tar.gz .
+# COPY --chmod=744 sources/openssl-3.0.1.tar.gz .
+# COPY --chmod=744 sources/patch-2.7.6.tar.xz .
+# COPY --chmod=744 sources/perl-5.34.0.tar.xz .
+# COPY --chmod=744 sources/pkg-config-0.29.2.tar.gz .
+# COPY --chmod=744 sources/procps-ng-3.3.17.tar.xz .
+# COPY --chmod=744 sources/psmisc-23.4.tar.xz .
+# COPY --chmod=744 sources/Python-3.10.2.tar.xz .
+# COPY --chmod=744 sources/python-3.10.2-docs-html.tar.bz2 .
+# COPY --chmod=744 sources/readline-8.1.2.tar.gz .
+# COPY --chmod=744 sources/sed-4.8.tar.xz .
+# COPY --chmod=744 sources/shadow-4.11.1.tar.xz .
+# COPY --chmod=744 sources/sysklogd-1.5.1.tar.gz .
+# COPY --chmod=744 sources/systemd-250.tar.gz .
+# COPY --chmod=744 sources/systemd-man-pages-250.tar.xz .
+# COPY --chmod=744 sources/sysvinit-3.01.tar.xz .
+# COPY --chmod=744 sources/tar-1.34.tar.xz .
+# COPY --chmod=744 sources/tcl8.6.12-src.tar.gz .
+# COPY --chmod=744 sources/tcl8.6.12-html.tar.gz .
+# COPY --chmod=744 sources/texinfo-6.8.tar.xz .
+# COPY --chmod=744 sources/tzdata2021e.tar.gz .
+# COPY --chmod=744 sources/udev-lfs-20171102.tar.xz .
+# COPY --chmod=744 sources/util-linux-2.37.4.tar.xz .
+# COPY --chmod=744 sources/vim-8.2.4383.tar.gz .
+# COPY --chmod=744 sources/XML-Parser-2.46.tar.gz .
+# COPY --chmod=744 sources/xz-5.2.5.tar.xz .
+# COPY --chmod=744 sources/zlib-1.2.12.tar.xz .
+# COPY --chmod=744 sources/zstd-1.5.2.tar.gz .
+# COPY --chmod=744 sources/binutils-2.38-lto_fix-1.patch .
+# COPY --chmod=744 sources/bzip2-1.0.8-install_docs-1.patch .
+# COPY --chmod=744 sources/coreutils-9.0-i18n-1.patch .
+# COPY --chmod=744 sources/coreutils-9.0-chmod_fix-1.patch .
+# COPY --chmod=744 sources/glibc-2.35-fhs-1.patch .
+# COPY --chmod=744 sources/kbd-2.4.0-backspace-1.patch .
+# COPY --chmod=744 sources/perl-5.34.0-upstream_fixes-1.patch .
+# COPY --chmod=744 sources/sysvinit-3.01-consolidated-1.patch .
+# COPY --chmod=744 sources/systemd-250-upstream_fixes-1.patch .
+# COPY --chmod=744 sources/busybox-${BUSYBOX_ARCH} .
 
 # NOTE: Even if this list is updated, BuildKit will only rebuild layers that use the updated files
-# ADD --chmod=744 https://download.savannah.gnu.org/releases/acl/acl-2.3.1.tar.xz .
-# ADD --chmod=744 https://download.savannah.gnu.org/releases/attr/attr-2.5.1.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/bash/bash-5.1.16.tar.gz .
-# ADD --chmod=744 https://github.com/gavinhoward/bc/releases/download/5.2.2/bc-5.2.2.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/binutils/binutils-2.38.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz .
-# ADD --chmod=744 https://www.sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz .
-# ADD --chmod=744 https://github.com/libcheck/check/releases/download/0.15.2/check-0.15.2.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/coreutils/coreutils-9.0.tar.xz .
-# ADD --chmod=744 https://dbus.freedesktop.org/releases/dbus/dbus-1.12.20.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/dejagnu/dejagnu-1.6.3.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/diffutils/diffutils-3.8.tar.xz .
-# ADD --chmod=744 https://downloads.sourceforge.net/project/e2fsprogs/e2fsprogs/v1.46.5/e2fsprogs-1.46.5.tar.gz .
-# ADD --chmod=744 https://sourceware.org/ftp/elfutils/0.186/elfutils-0.186.tar.bz2 .
-# ADD --chmod=744 https://github.com/eudev-project/eudev/releases/download/v3.2.11/eudev-3.2.11.tar.gz .
-# ADD --chmod=744 https://prdownloads.sourceforge.net/expat/expat-2.4.6.tar.xz .
-# ADD --chmod=744 https://prdownloads.sourceforge.net/expect/expect5.45.4.tar.gz .
-# ADD --chmod=744 https://astron.com/pub/file/file-5.41.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/findutils/findutils-4.9.0.tar.xz .
-# ADD --chmod=744 https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/gawk/gawk-5.1.1.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/gdbm/gdbm-1.23.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/gettext/gettext-0.21.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/glibc/glibc-2.35.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/gperf/gperf-3.1.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/grep/grep-3.7.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/groff/groff-1.22.4.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/grub/grub-2.06.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/gzip/gzip-1.11.tar.xz .
-# ADD --chmod=744 https://github.com/Mic92/iana-etc/releases/download/20220207/iana-etc-20220207.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/inetutils/inetutils-2.2.tar.xz .
-# ADD --chmod=744 https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz .
-# ADD --chmod=744 https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-5.16.0.tar.xz .
-# ADD --chmod=744 https://files.pythonhosted.org/packages/source/J/Jinja2/Jinja2-3.0.3.tar.gz .
-# ADD --chmod=744 https://www.kernel.org/pub/linux/utils/kbd/kbd-2.4.0.tar.xz .
-# ADD --chmod=744 https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-29.tar.xz .
-# ADD --chmod=744 https://www.greenwoodsoftware.com/less/less-590.tar.gz .
-# ADD --chmod=744 https://www.linuxfromscratch.org/lfs/downloads/11.1/lfs-bootscripts-20210608.tar.xz .
-# ADD --chmod=744 https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.63.tar.xz .
-# ADD --chmod=744 https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz .
-# ADD --chmod=744 https://download.savannah.gnu.org/releases/libpipeline/libpipeline-1.5.5.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.xz .
-# ADD --chmod=744 https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.16.9.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/make/make-4.3.tar.gz .
-# ADD --chmod=744 https://download.savannah.gnu.org/releases/man-db/man-db-2.10.1.tar.xz .
-# ADD --chmod=744 https://www.kernel.org/pub/linux/docs/man-pages/man-pages-5.13.tar.xz .
-# ADD --chmod=744 https://files.pythonhosted.org/packages/source/M/MarkupSafe/MarkupSafe-2.0.1.tar.gz .
-# ADD --chmod=744 https://github.com/mesonbuild/meson/releases/download/0.61.1/meson-0.61.1.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz .
-# ADD --chmod=744 https://www.mpfr.org/mpfr-4.1.0/mpfr-4.1.0.tar.xz .
-# ADD --chmod=744 https://invisible-mirror.net/archives/ncurses/ncurses-6.3.tar.gz .
-# ADD --chmod=744 https://github.com/ninja-build/ninja/archive/v1.10.2/ninja-1.10.2.tar.gz .
-# ADD --chmod=744 https://www.openssl.org/source/openssl-3.0.1.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz .
-# ADD --chmod=744 https://www.cpan.org/src/5.0/perl-5.34.0.tar.xz .
-# ADD --chmod=744 https://pkg-config.freedesktop.org/releases/pkg-config-0.29.2.tar.gz .
-# ADD --chmod=744 https://sourceforge.net/projects/procps-ng/files/Production/procps-ng-3.3.17.tar.xz .
-# ADD --chmod=744 https://sourceforge.net/projects/psmisc/files/psmisc/psmisc-23.4.tar.xz .
-# ADD --chmod=744 https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tar.xz .
-# ADD --chmod=744 https://www.python.org/ftp/python/doc/3.10.2/python-3.10.2-docs-html.tar.bz2 .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/readline/readline-8.1.2.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/sed/sed-4.8.tar.xz .
-# ADD --chmod=744 https://github.com/shadow-maint/shadow/releases/download/v4.11.1/shadow-4.11.1.tar.xz .
-# ADD --chmod=744 https://www.infodrom.org/projects/sysklogd/download/sysklogd-1.5.1.tar.gz .
-# ADD --chmod=744 https://github.com/systemd/systemd/archive/v250/systemd-250.tar.gz .
-# ADD --chmod=744 https://anduin.linuxfromscratch.org/LFS/systemd-man-pages-250.tar.xz .
-# ADD --chmod=744 https://download.savannah.gnu.org/releases/sysvinit/sysvinit-3.01.tar.xz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/tar/tar-1.34.tar.xz .
-# ADD --chmod=744 https://downloads.sourceforge.net/tcl/tcl8.6.12-src.tar.gz .
-# ADD --chmod=744 https://downloads.sourceforge.net/tcl/tcl8.6.12-html.tar.gz .
-# ADD --chmod=744 https://ftp.gnu.org/gnu/texinfo/texinfo-6.8.tar.xz .
-# ADD --chmod=744 https://www.iana.org/time-zones/repository/releases/tzdata2021e.tar.gz .
-# ADD --chmod=744 https://anduin.linuxfromscratch.org/LFS/udev-lfs-20171102.tar.xz .
-# ADD --chmod=744 https://www.kernel.org/pub/linux/utils/util-linux/v2.37/util-linux-2.37.4.tar.xz .
-# ADD --chmod=744 https://anduin.linuxfromscratch.org/LFS/vim-8.2.4383.tar.gz .
-# ADD --chmod=744 https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.46.tar.gz .
-# ADD --chmod=744 https://tukaani.org/xz/xz-5.2.5.tar.xz .
-# ADD --chmod=744 https://zlib.net/zlib-1.2.12.tar.xz .
-# ADD --chmod=744 https://github.com/facebook/zstd/releases/download/v1.5.2/zstd-1.5.2.tar.gz .
-# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/binutils-2.38-lto_fix-1.patch .
-# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/bzip2-1.0.8-install_docs-1.patch .
-# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-i18n-1.patch .
-# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-chmod_fix-1.patch .
-# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/glibc-2.35-fhs-1.patch .
-# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/kbd-2.4.0-backspace-1.patch .
-# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/perl-5.34.0-upstream_fixes-1.patch .
-# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/sysvinit-3.01-consolidated-1.patch .
-# ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/systemd-250-upstream_fixes-1.patch .
-# ADD --chmod=744 https://www.busybox.net/downloads/binaries/1.28.1-defconfig-multiarch/busybox-${BUSYBOX_ARCH} .
+ADD --chmod=744 https://download.savannah.gnu.org/releases/acl/acl-2.3.1.tar.xz .
+ADD --chmod=744 https://download.savannah.gnu.org/releases/attr/attr-2.5.1.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/autoconf/autoconf-2.71.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/automake/automake-1.16.5.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/bash/bash-5.1.16.tar.gz .
+ADD --chmod=744 https://github.com/gavinhoward/bc/releases/download/5.2.2/bc-5.2.2.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/binutils/binutils-2.38.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz .
+ADD --chmod=744 https://www.sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz .
+ADD --chmod=744 https://github.com/libcheck/check/releases/download/0.15.2/check-0.15.2.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/coreutils/coreutils-9.0.tar.xz .
+ADD --chmod=744 https://dbus.freedesktop.org/releases/dbus/dbus-1.12.20.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/dejagnu/dejagnu-1.6.3.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/diffutils/diffutils-3.8.tar.xz .
+ADD --chmod=744 https://downloads.sourceforge.net/project/e2fsprogs/e2fsprogs/v1.46.5/e2fsprogs-1.46.5.tar.gz .
+ADD --chmod=744 https://sourceware.org/ftp/elfutils/0.186/elfutils-0.186.tar.bz2 .
+ADD --chmod=744 https://github.com/eudev-project/eudev/releases/download/v3.2.11/eudev-3.2.11.tar.gz .
+ADD --chmod=744 https://prdownloads.sourceforge.net/expat/expat-2.4.6.tar.xz .
+ADD --chmod=744 https://prdownloads.sourceforge.net/expect/expect5.45.4.tar.gz .
+ADD --chmod=744 https://astron.com/pub/file/file-5.41.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/findutils/findutils-4.9.0.tar.xz .
+ADD --chmod=744 https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/gawk/gawk-5.1.1.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/gcc/gcc-11.2.0/gcc-11.2.0.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/gdbm/gdbm-1.23.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/gettext/gettext-0.21.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/glibc/glibc-2.35.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/gmp/gmp-6.2.1.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/gperf/gperf-3.1.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/grep/grep-3.7.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/groff/groff-1.22.4.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/grub/grub-2.06.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/gzip/gzip-1.11.tar.xz .
+ADD --chmod=744 https://github.com/Mic92/iana-etc/releases/download/20220207/iana-etc-20220207.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/inetutils/inetutils-2.2.tar.xz .
+ADD --chmod=744 https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz .
+ADD --chmod=744 https://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-5.16.0.tar.xz .
+ADD --chmod=744 https://files.pythonhosted.org/packages/source/J/Jinja2/Jinja2-3.0.3.tar.gz .
+ADD --chmod=744 https://www.kernel.org/pub/linux/utils/kbd/kbd-2.4.0.tar.xz .
+ADD --chmod=744 https://www.kernel.org/pub/linux/utils/kernel/kmod/kmod-29.tar.xz .
+ADD --chmod=744 https://www.greenwoodsoftware.com/less/less-590.tar.gz .
+ADD --chmod=744 https://www.linuxfromscratch.org/lfs/downloads/11.1/lfs-bootscripts-20210608.tar.xz .
+ADD --chmod=744 https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-2.63.tar.xz .
+ADD --chmod=744 https://github.com/libffi/libffi/releases/download/v3.4.2/libffi-3.4.2.tar.gz .
+ADD --chmod=744 https://download.savannah.gnu.org/releases/libpipeline/libpipeline-1.5.5.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.xz .
+ADD --chmod=744 https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.16.9.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/make/make-4.3.tar.gz .
+ADD --chmod=744 https://download.savannah.gnu.org/releases/man-db/man-db-2.10.1.tar.xz .
+ADD --chmod=744 https://www.kernel.org/pub/linux/docs/man-pages/man-pages-5.13.tar.xz .
+ADD --chmod=744 https://files.pythonhosted.org/packages/source/M/MarkupSafe/MarkupSafe-2.0.1.tar.gz .
+ADD --chmod=744 https://github.com/mesonbuild/meson/releases/download/0.61.1/meson-0.61.1.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/mpc/mpc-1.2.1.tar.gz .
+ADD --chmod=744 https://www.mpfr.org/mpfr-4.1.0/mpfr-4.1.0.tar.xz .
+ADD --chmod=744 https://invisible-mirror.net/archives/ncurses/ncurses-6.3.tar.gz .
+ADD --chmod=744 https://github.com/ninja-build/ninja/archive/v1.10.2/ninja-1.10.2.tar.gz .
+ADD --chmod=744 https://www.openssl.org/source/openssl-3.0.1.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/patch/patch-2.7.6.tar.xz .
+ADD --chmod=744 https://www.cpan.org/src/5.0/perl-5.34.0.tar.xz .
+ADD --chmod=744 https://pkg-config.freedesktop.org/releases/pkg-config-0.29.2.tar.gz .
+ADD --chmod=744 https://sourceforge.net/projects/procps-ng/files/Production/procps-ng-3.3.17.tar.xz .
+ADD --chmod=744 https://sourceforge.net/projects/psmisc/files/psmisc/psmisc-23.4.tar.xz .
+ADD --chmod=744 https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tar.xz .
+ADD --chmod=744 https://www.python.org/ftp/python/doc/3.10.2/python-3.10.2-docs-html.tar.bz2 .
+ADD --chmod=744 https://ftp.gnu.org/gnu/readline/readline-8.1.2.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/sed/sed-4.8.tar.xz .
+ADD --chmod=744 https://github.com/shadow-maint/shadow/releases/download/v4.11.1/shadow-4.11.1.tar.xz .
+ADD --chmod=744 https://www.infodrom.org/projects/sysklogd/download/sysklogd-1.5.1.tar.gz .
+ADD --chmod=744 https://github.com/systemd/systemd/archive/v250/systemd-250.tar.gz .
+ADD --chmod=744 https://anduin.linuxfromscratch.org/LFS/systemd-man-pages-250.tar.xz .
+ADD --chmod=744 https://download.savannah.gnu.org/releases/sysvinit/sysvinit-3.01.tar.xz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/tar/tar-1.34.tar.xz .
+ADD --chmod=744 https://downloads.sourceforge.net/tcl/tcl8.6.12-src.tar.gz .
+ADD --chmod=744 https://downloads.sourceforge.net/tcl/tcl8.6.12-html.tar.gz .
+ADD --chmod=744 https://ftp.gnu.org/gnu/texinfo/texinfo-6.8.tar.xz .
+ADD --chmod=744 https://www.iana.org/time-zones/repository/releases/tzdata2021e.tar.gz .
+ADD --chmod=744 https://anduin.linuxfromscratch.org/LFS/udev-lfs-20171102.tar.xz .
+ADD --chmod=744 https://www.kernel.org/pub/linux/utils/util-linux/v2.37/util-linux-2.37.4.tar.xz .
+ADD --chmod=744 https://anduin.linuxfromscratch.org/LFS/vim-8.2.4383.tar.gz .
+ADD --chmod=744 https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.46.tar.gz .
+ADD --chmod=744 https://tukaani.org/xz/xz-5.2.5.tar.xz .
+ADD --chmod=744 https://zlib.net/zlib-1.2.12.tar.xz .
+ADD --chmod=744 https://github.com/facebook/zstd/releases/download/v1.5.2/zstd-1.5.2.tar.gz .
+ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/binutils-2.38-lto_fix-1.patch .
+ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/bzip2-1.0.8-install_docs-1.patch .
+ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-i18n-1.patch .
+ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/coreutils-9.0-chmod_fix-1.patch .
+ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/glibc-2.35-fhs-1.patch .
+ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/kbd-2.4.0-backspace-1.patch .
+ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/perl-5.34.0-upstream_fixes-1.patch .
+ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/sysvinit-3.01-consolidated-1.patch .
+ADD --chmod=744 https://www.linuxfromscratch.org/patches/lfs/11.1/systemd-250-upstream_fixes-1.patch .
+ADD --chmod=744 https://www.busybox.net/downloads/binaries/1.28.1-defconfig-multiarch/busybox-${BUSYBOX_ARCH} .
 
 #################
 # Stage 1. Host #
@@ -278,7 +286,7 @@ USER ${LFS_USER}
 # III. Building the LFS Cross Toolchain and Temporary Tools #
 #############################################################
 
-ARG TARGET_ARCH
+ARG LFS_ARCH
 ARG LFS_TGT
 ARG MAKEFLAGS
 
@@ -316,7 +324,7 @@ RUN --mount=type=tmpfs \
     mv -v gmp-6.2.1 gmp
     tar -xf ../mpc-1.2.1.tar.gz
     mv -v mpc-1.2.1 mpc
-    case $TARGET_ARCH in
+    case $LFS_ARCH in
         x86_64)
             sed -e '/m64=/s/lib64/lib/' \
                 -i.orig gcc/config/i386/t-linux64
@@ -375,7 +383,7 @@ RUN --mount=type=tmpfs \
 <<'EOT' $SH
     tar -xf glibc-2.35.tar.xz
     cd glibc-2.35
-    case $TARGET_ARCH in
+    case $LFS_ARCH in
         x86_64)
             ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64
             ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64/ld-lsb-x86-64.so.3
@@ -679,7 +687,7 @@ RUN --mount=type=tmpfs \
     mv -v gmp-6.2.1 gmp
     tar -xf ../mpc-1.2.1.tar.gz
     mv -v mpc-1.2.1 mpc
-    case $TARGET_ARCH in
+    case $LFS_ARCH in
         x86_64)
             sed -e '/m64=/s/lib64/lib/' \
                 -i.orig gcc/config/i386/t-linux64
@@ -823,7 +831,7 @@ RUN <<'EOT' $SH
     chmod -v 600  /var/log/btmp
 EOT
 
-ARG TARGET_ARCH
+ARG LFS_ARCH
 ARG LFS_TGT
 ARG MAKEFLAGS
 
@@ -1230,7 +1238,7 @@ RUN --mount=type=tmpfs \
     cd unix
     ./configure --prefix=/usr           \
                 --mandir=/usr/share/man \
-                $([[ $TARGET_ARCH =~ x86_64|aarch64 ]] && echo --enable-64bit)
+                $([[ $LFS_ARCH =~ x86_64|aarch64 ]] && echo --enable-64bit)
     make
     sed -e "s|$SRCDIR/unix|/usr/lib|" \
         -e "s|$SRCDIR|/usr/include|"  \
@@ -1266,7 +1274,7 @@ RUN --mount=type=tmpfs \
                 --enable-shared                \
                 --mandir=/usr/share/man        \
                 --with-tclinclude=/usr/include \
-                --build=$TARGET_ARCH-unknown-linux-gnu
+                --build=$LFS_ARCH-unknown-linux-gnu
     make
     if $ENABLE_TESTS; then make test; fi
     make install
@@ -1299,7 +1307,7 @@ RUN --mount=type=tmpfs \
     tar -xf binutils-2.38.tar.xz
     cd binutils-2.38
     patch -Np1 -i ../binutils-2.38-lto_fix-1.patch
-    case $TARGET_ARCH in
+    case $LFS_ARCH in
         x86_64)
             sed -e '/R_386_TLS_LE /i \   || (TYPE) == R_386_TLS_IE \\' \
                 -i ./bfd/elfxx-x86.h
@@ -1459,7 +1467,7 @@ RUN --mount=type=tmpfs \
     sed -e '/static.*SIGSTKSZ/d' \
         -e 's/return kAltStackSize/return SIGSTKSZ * 4/' \
         -i libsanitizer/sanitizer_common/sanitizer_posix_libcdep.cpp
-    case $TARGET_ARCH in
+    case $LFS_ARCH in
         x86_64)
             sed -e '/m64=/s/lib64/lib/' \
                 -i.orig gcc/config/i386/t-linux64
@@ -2524,10 +2532,12 @@ CONFIG_FW_LOADER_USER_HELPER=n
 CONFIG_INOTIFY_USER=y
 CONFIG_TMPFS_POSIX_ACL=y
 
-# Support for SCSI and CD ROM connected to SCSI
+# Support for SCSI and CD ROM
+CONFIG_ISO9660_FS=y
 CONFIG_SCSI=y
 CONFIG_BLK_DEV_SR=y
 CONFIG_SCSI_CONSTANTS=y
+CONFIG_SCSI_VIRTIO=y
 
 # Support for UEFI
 CONFIG_EFI=y
@@ -2544,13 +2554,13 @@ CONFIG_EFIVAR_FS=y
 CONFIG_SQUASHFS=y
 CONFIG_OVERLAY_FS=y
 
-# Suppress stack usage prompt
+# Suppress stack usage log
 CONFIG_DEBUG_STACK_USAGE=n
 EOT2
     scripts/kconfig/merge_config.sh .config override.config
     make
     make modules_install
-    case $TARGET_ARCH in
+    case $LFS_ARCH in
         x86_64)
             cp -iv arch/x86/boot/bzImage /boot/vmlinuz-5.16.9
             ;;
@@ -2580,13 +2590,13 @@ RUN echo 'PS1='"'"'\u@\h:\w\$ '"'" >> /etc/profile
 ########################
 FROM ${DOCKER_ARCH}/alpine:3.16 AS iso-builder
 ARG SH
-ARG TARGET_ARCH
+ARG LFS_ARCH
 
 RUN apk add --no-cache \
         squashfs-tools xorriso cpio wget \
         dosfstools mtools \
         grub grub-efi \
-        $([[ $TARGET_ARCH = x86_64 ]] && echo grub-bios)
+        $([[ $LFS_ARCH = x86_64 ]] && echo grub-bios)
 
 RUN mkdir -pv /build
 
@@ -2734,10 +2744,10 @@ EOT
 WORKDIR /build/iso_root
 
 # Prepare file structure
-ARG TARGET_ARCH
+ARG LFS_ARCH
 RUN <<'EOT' $SH
     mkdir -v boot boot/grub boot/grub/i386-pc boot/grub/x86_64-efi
-    case $TARGET_ARCH in
+    case $LFS_ARCH in
         x86_64)
             mkdir -v boot/grub/i386-pc boot/grub/x86_64-efi
             ;;
@@ -2759,7 +2769,7 @@ RUN mkdir -pv tmp
 
 # Prepare image for BIOS booting (x86 only)
 RUN <<'EOT' $SH
-    if [[ $TARGET_ARCH = x86_64 ]]; then
+    if [[ $LFS_ARCH = x86_64 ]]; then
         grub-mkimage        \
             -o tmp/core.img \
             -O i386-pc      \
@@ -2781,7 +2791,7 @@ configfile /boot/grub/grub.cfg
 EOT
 
 RUN <<'EOT' $SH
-    case $TARGET_ARCH in
+    case $LFS_ARCH in
         x86_64)
             image_name=bootx64.efi
             grub_format=x86_64-efi
@@ -2836,7 +2846,7 @@ RUN rm -rv tmp
 ARG ISO_IMAGE_NAME
 ARG ISO_VOLUME_ID
 RUN <<'EOT' $SH
-    case $TARGET_ARCH in
+    case $LFS_ARCH in
         x86_64)
             # BIOS boot entry
             boot_entries="
