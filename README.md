@@ -61,18 +61,12 @@ qemu-system-x86_64 -m 1024M -bios /usr/share/ovmf/OVMF.fd -cdrom lfs-x86_64.iso
 
 ARM 64 UEFI:
 ```
-# Reference: https://lanyaplab.com/index.php/2020/06/08/how-to-install-ubuntu-server-for-arm-in-a-qemu-aarch64-virtual-machine/
-
-# Set up flash images
 cp /usr/share/qemu-efi-aarch64/QEMU_EFI.fd flash0.img
 truncate -s 64M flash0.img
-truncate -s 64M flash1.img
 
 qemu-system-aarch64 \
-    -M virt -cpu cortex-a57 -m 1024M \
-    -nographic \
-    -drive if=pflash,format=raw,file=flash0.img,readonly \
-    -drive if=pflash,format=raw,file=flash1.img \
+    -M virt -cpu cortex-a57 -m 1024M -nographic \
+    -pflash flash0.img \
     -cdrom lfs-aarch64.iso
 ```
 NOTE: To boot on other ARM devices with different mediums,
