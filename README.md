@@ -3,7 +3,7 @@
 A Dockerfile to build [Linux From Scratch 11.1-systemd](https://www.linuxfromscratch.org/lfs/view/11.1-systemd),
 supporting x86_64 and aarch64/arm64.
 
-## Usage (LFS on x86_64)
+## Usage (for x86_64)
 
 First, [install Docker](https://docs.docker.com/get-docker/) on your system.
 A Docker version >= 18.09 is required since some BuildKit features are used in this Dockerfile.
@@ -19,8 +19,8 @@ the entire build took roughly 2 hours and used about 15 GB of disk space.
 
 ## Other architectures
 
-In default, the Dockerfile is set to build for x86_64 (on an x86_64 host).
-To build for ARM 64-bit CPUs, change the following variables on the top of the Dockerfile:
+By default, the Dockerfile is set to build for x86_64 (on an x86_64 host).
+To build for ARM 64-bit CPUs, change the following variables at the top of the Dockerfile:
 ```
 ARG LFS_ARCH=aarch64
 ARG DOCKER_ARCH=arm64v8
@@ -86,7 +86,7 @@ One crucial feature used in this Dockerfile is the [multi-stage build](https://d
 to sequentially specify multiple images in a Dockerfile, with each image potentially referencing files
 from previous images.
 
-Using multi-stage build, our Dockerfile is splitted into the following stages,
+Using multi-stage build, our Dockerfile is split into the following stages,
 each corresponding to a different part of the LFS manual:
 ```
 # Stage 1: prepare the host
