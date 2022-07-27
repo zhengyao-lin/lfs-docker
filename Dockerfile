@@ -32,7 +32,7 @@ ARG LFS_HOSTNAME=lfs
 
 # Build options
 ARG ENABLE_TESTS=false
-ARG MAKEFLAGS=-j32
+ARG MAKEFLAGS=-j8
 
 # Final bootable ISO image options
 ARG ISO_IMAGE_NAME=lfs-${LFS_ARCH}.iso
@@ -401,7 +401,7 @@ RUN --mount=type=tmpfs \
         --prefix=/usr                      \
         --host=$LFS_TGT                    \
         --build=$(../scripts/config.guess) \
-        --enable-kernel=5.4                \
+        --enable-kernel=3.2                \
         --with-headers=$LFS/usr/include    \
         libc_cv_slibdir=/usr/lib
     make
