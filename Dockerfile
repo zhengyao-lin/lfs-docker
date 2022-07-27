@@ -14,15 +14,15 @@ ARG SH="sh -eu"
 
 # Architecture codes
 
-# For aarch64
-# ARG LFS_ARCH=aarch64
-# ARG DOCKER_ARCH=arm64v8
-# ARG BUSYBOX_ARCH=armv8l
-
 # For x86_64
 ARG LFS_ARCH=x86_64
 ARG DOCKER_ARCH=amd64
 ARG BUSYBOX_ARCH=x86_64
+
+# For aarch64
+# ARG LFS_ARCH=aarch64
+# ARG DOCKER_ARCH=arm64v8
+# ARG BUSYBOX_ARCH=armv8l
 
 ARG LFS=/lfs
 ARG LFS_TGT=${LFS_ARCH}-lfs-linux-gnu
