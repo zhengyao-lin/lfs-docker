@@ -2746,7 +2746,7 @@ WORKDIR /build/iso_root
 # Prepare file structure
 ARG LFS_ARCH
 RUN <<'EOT' $SH
-    mkdir -v boot boot/grub boot/grub/i386-pc boot/grub/x86_64-efi
+    mkdir -v boot boot/grub
     case $LFS_ARCH in
         x86_64)
             mkdir -v boot/grub/i386-pc boot/grub/x86_64-efi
