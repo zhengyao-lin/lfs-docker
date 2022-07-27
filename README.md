@@ -78,6 +78,9 @@ qemu-system-aarch64 \
 NOTE: To boot on other ARM devices with different mediums,
 probably a lot more drivers need to be added to the kernel.
 
+Running LFS 11.1-systemd on QEMU aarch64:
+[<img src="https://github.com/rod-lin/lfs-docker/raw/files/aarch64-qemu.gif">](https://asciinema.org/a/dFkghKmenCE7KSOTylbGcAVn1)
+
 ## How does the Dockerfile work
 
 This Dockerfile is self-contained and does not use any files from the context.
